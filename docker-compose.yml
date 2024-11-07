@@ -1,0 +1,49 @@
+version: '3'
+services:
+  # frontend:
+  #   build: 
+  #     context: ./frontend
+  #     network: host
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+      
+  # backend:
+  #   build: ./backend
+  #   volumes:
+  #     - ./backend:/app
+  #   ports:
+  #     - "5000:5000"
+  #   networks:
+  #     - app-network
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     - DATABASE_URL=postgresql://loposg:loposg123@db:5432/loposg
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    command: ["start-dev"]
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: loposg
+      POSTGRES_PASSWORD: loposg123
+      POSTGRES_DB: loposg
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+
+networks:
+  app-network:
+    driver: bridge

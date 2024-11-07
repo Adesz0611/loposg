@@ -1,0 +1,4 @@
+LopósG kártyajáték
+==================
+
+Egyetemi projekt
