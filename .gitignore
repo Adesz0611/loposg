@@ -1,0 +1,10 @@
+# Ignore virtual environment folders
+Lib/
+*/Lib/
+Scripts/
+*/Scripts/
+Include/
+*/Include/
+pyvenv.cfg
+requirements.txt
+Dockerfile

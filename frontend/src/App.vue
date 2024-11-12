@@ -1,67 +1,14 @@
 <template>
-  <button @click="login">Login</button>
-  <button @click="logout">Logout</button>
-  <button @click="create_room">Szoba létrehozása</button>
-  <button @click="get_card">Lap húzás</button>
-  <p>Card: {{ card }}</p>
-  <p>Room id: {{ room_id }}</p>
-  <!-- <RouterView />-->
+  <RouterView />
 </template>
 
 <script setup>
-//import { RouterLink, RouterView } from 'vue-router'
-import { ref } from 'vue';
-import axios from 'axios';
-
-const room_id = ref('');
-const card = ref('');
-
-function login() {
-  axios.get('http://localhost:5000/login')
-    .then(response => {
-      window.location.href = response.data.auth_url;
-    })
-    .catch((error) => {
-      console.log(error)
-    });
-}
-
-function create_room() {
-  axios.post('http://localhost:5000/create_room', {}, {
-    headers: {
-      'Authorization': localStorage.getItem('access_token')
-    }
-  }).then(response => {
-    room_id.value = response.data.room_id;
-  })
-  .catch((error) => {
-    console.log(error)
-  });
-}
-
-function logout() {
-  axios.post('http://localhost:5000/logout', {
-    token_refresh: localStorage.getItem('refresh_token'),
-  }, )
-    .then(response => {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      alert('Kijelentkeztél!');
-    })
-    .catch((error) => {
-      console.log(error)
-    });
-}
-
-const cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-
-function get_card() {
-  card.value = cards[Math.floor(Math.random() * cards.length)];
-}
+import { RouterLink, RouterView } from 'vue-router';
 </script>
 
 
 <style scoped>
+/*
 header {
   line-height: 1.5;
   max-height: 100vh;
@@ -123,4 +70,5 @@ nav a:first-of-type {
     margin-top: 1rem;
   }
 }
+*/
 </style>
