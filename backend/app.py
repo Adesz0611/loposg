@@ -1,6 +1,6 @@
 from quart import Quart, request
 import keycloak as kc
-import random
+import random, asyncpg, json
 from quart_cors import cors
 
 app = Quart(__name__)
@@ -9,7 +9,7 @@ app = cors(app, allow_origin="*")
 openid = kc.KeycloakOpenID(server_url="http://localhost:8080/",
                            client_id="loposg",
                            realm_name="master",
-                           client_secret_key="Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq",
+                           client_secret_key="M8fQJjPAPE23JaFejL1XrIsagv75PS58",
 )
 
 async def check_user_loggedin(token):
@@ -27,6 +27,18 @@ def generate_room_id():
         room_id = ''.join([str(random.randint(0, 9)) for _ in range(6)])
         if room_id not in rooms:
             return room_id
+
+async def generate_gamestate():
+    template = {
+        "card_pool": ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'] * 4,
+        "players": [],
+        "cards": []
+    }
+    return template
+
+@app.before_serving
+async def create_db_pool():
+    app.pool = await asyncpg.create_pool(user="loposg", password="loposg123", database="loposg", host="localhost")
 
 @app.get("/login")
 async def login():
@@ -62,6 +74,8 @@ async def create_room():
 
     room_id = generate_room_id()
     rooms[room_id] = {}
+    gamestate = await generate_gamestate()
+    await app.pool.execute("INSERT INTO rooms (room_id, gamestate) VALUES ($1, $2)", room_id, json.dumps(gamestate))
     return {"room_id": room_id}
 
 # rooms = {
@@ -89,7 +103,15 @@ async def join_room():
     room_id = data.get("room_id")
     if room_id not in rooms:
         return {"error": "Room not found."}, 404
-
+    room = await app.pool.fetchrow("SELECT * FROM rooms WHERE room_id = $1", room_id)
+    if room is None:
+        return {"error": "Room not found."}, 404
+    gamestate = json.loads(room["gamestate"])
+    if len(gamestate["players"]) >= 4:
+        return {"error": "Room is full."}, 403
+    player_obj = {"name": user["preferred_username"], "hand": [], "stack": [], "score": 0, "id" : user["sub"]}
+    gamestate["players"].append(player_obj)
+    await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), room_id)
     return {"status": "ok", "room_id": room_id}
 
 def run() -> None:

@@ -10,9 +10,16 @@
 <script setup>
 import { ref } from 'vue';
 import { useRoomIdStore } from '../stores/room_id';
+import { createRouter, useRouter } from 'vue-router';
+const router = useRouter();
 
 const roomId = ref('');
 const room_id_store = useRoomIdStore();
+
+if (!room_id_store.room_id) {
+    router.push({ name: 'home' });
+}
+
 </script>
 
 <style scoped>
