@@ -1,58 +1,77 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import axios from 'axios'
-import PlayView from '@/views/PlayView.vue';
-import AboutView from '@/views/AboutView.vue';
+// FILE: src/router/index.js
+
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+import AboutView from '../views/AboutView.vue';
+import GameRoom from '../components/GameRoom.vue';
+import axios from 'axios';
+import { useAuthStore } from '../stores/auth';
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: HomeView,
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: AboutView,
+  },
+  {
+    path: '/room/:roomId',
+    name: 'GameRoom',
+    component: GameRoom,
+    props: true,
+  },
+  {
+    path: '/callback',
+    name: 'Callback',
+    component: HomeView, // Opció: Külön Callback komponens létrehozása
+  },
+  // Egyéb útvonalak
+];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/play',
-      name: 'play',
-      component: PlayView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: AboutView,
-    },
-  ],
-})
+  history: createWebHistory(),
+  routes,
+});
 
-router.beforeEach((to, from, next) => {
+/**
+ * Globális router hook az autentikációs kód feldolgozására.
+ */
+router.beforeEach(async (to, from, next) => {
   const code = to.query.code;
   if (code) {
-    const { code, ...queryWithoutCode } = to.query;
-    router.replace({ path: to.path });
+    try {
+      const response = await axios.post('http://localhost:5000/callback', { code });
+      const { access_token, refresh_token, user_info } = response.data.token;
 
-    axios.post('http://localhost:5000/callback', { code })
-      .then(response => {
-        const access_token = response.data.token.access_token;
-        const refresh_token = response.data.token.refresh_token;
+      // Ellenőrizzük, hogy a szükséges adatok megvannak-e
+      if (!access_token || !refresh_token || !user_info) {
+        throw new Error('A válasz nem tartalmazza a szükséges adatokat.');
+      }
 
-        localStorage.setItem('access_token', access_token);
-        localStorage.setItem('refresh_token', refresh_token);
-        localStorage.setItem('isUserLoggedIn', true);
+      // Tokenek tárolása a localStorage-ban
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
+      localStorage.setItem('isUserLoggedIn', true);
 
-        const user = response.data.user_info;
-        const username = user.preferred_username;
+      // AuthStore frissítése a felhasználó ID-jával
+      const authStore = useAuthStore();
+      authStore.setUserId(user_info.sub);
 
-        console.log('bocs username', username)
-        next();
-      })
-      .catch(error => {
-        console.error("Error during login callback:", error);
-        next();
-      });
+      console.log('Bejelentkezett felhasználó:', user_info.preferred_username);
+
+      // Tisztítsd meg az URL-t és navigálj a Home útvonalra
+      next({ name: 'Home' });
+    } catch (error) {
+      console.error('Error during login callback:', error);
+      next();
+    }
   } else {
     next();
   }
 });
 
-export default router
+export default router;

@@ -2,4 +2,4 @@ quart
 asyncpg
 python-keycloak-async
 quart-cors
-asyncpg
+aiohttp
