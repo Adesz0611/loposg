@@ -3,6 +3,8 @@ import HomeView from '../views/HomeView.vue'
 import axios from 'axios'
 import PlayView from '@/views/PlayView.vue';
 import AboutView from '@/views/AboutView.vue';
+import ProfileView from '@/views/ProfileView.vue';
+import LeaderboardView from '@/views/LeaderboardView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,6 +24,16 @@ const router = createRouter({
       name: 'about',
       component: AboutView,
     },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+    },
+    {
+      path: '/leaderboard',
+      name: 'leaderboard',
+      component: LeaderboardView,
+    }
   ],
 })
 
@@ -41,9 +53,7 @@ router.beforeEach((to, from, next) => {
         localStorage.setItem('isUserLoggedIn', true);
 
         const user = response.data.user_info;
-        const username = user.preferred_username;
 
-        console.log('bocs username', username)
         next();
       })
       .catch(error => {

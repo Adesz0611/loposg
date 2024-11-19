@@ -1,74 +1,56 @@
 <template>
+  <BNavbar variant="dark" v-b-color-mode="'dark'" class="navbar">
+    <BNavbarNav>
+      <BNavItem href="/">Kezdőlap</BNavItem>
+
+      <BNavItemDropdown :text="username_store.username" right>
+        <BDropdownItem href="/profile">Profil</BDropdownItem>
+        <BDropdownItem href="/logout">Kijelentkezés</BDropdownItem>
+      </BNavItemDropdown>
+
+    </BNavbarNav>
+  </BNavbar>
   <RouterView />
+  <footer>
+    <div style="display: flex; align-items: center;">
+      <img src="@/assets/logo.svg" alt="Vue logo" />
+      <p style="margin-left: 10px;">LopósG kártyajáték &copy; 2024</p>
+    </div>
+  </footer>
 </template>
 
 <script setup>
 import { RouterLink, RouterView } from 'vue-router';
+import { ref } from 'vue';
+import { useUsernameStore } from './stores/username';
+
+const username_store = useUsernameStore();
+
 </script>
 
 
 <style scoped>
-/*
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+
+  background-color: #382e88;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+
+  background-color: #382e88;
+  padding: 1rem;
+  text-align: left;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+footer img {
+  width: 50px;
 }
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-*/
 </style>

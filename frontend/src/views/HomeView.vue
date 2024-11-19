@@ -49,7 +49,7 @@ function logout() {
 }
 
 function create_room() {
-  axios.post('http://localhost:5000/create_room', {}, {
+  axios.post('http://localhost:5000/rooms', {}, {
     headers: {
       'Authorization': localStorage.getItem('access_token')
     }
@@ -76,8 +76,7 @@ function fetch_rooms() {
 
 const router = useRouter();
 function join_room() {
-  axios.post('http://localhost:5000/join_room', {
-    room_id: join_text.value
+  axios.post('http://localhost:5000/rooms/' + join_text.value + '/join', {
   }, {
     headers: {
       'Authorization': localStorage.getItem('access_token')
@@ -85,7 +84,6 @@ function join_room() {
   }).then(response => {
     room_id_store.room_id = response.data.room_id;
     router.push({ path: '/play' });
-    console.log(response.data);
   })
 }
 const cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
