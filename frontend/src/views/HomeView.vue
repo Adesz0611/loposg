@@ -1,15 +1,22 @@
 <template>
-  <button @click="login">Login</button>
-  <button @click="logout">Logout</button>
-  <button @click="create_room">Szoba létrehozása</button>
-  <button @click="get_card">Lap húzás</button>
-  <textarea v-model="join_text" placeholder="Szoba azonosító"></textarea>
-  <button @click="join_room">Csatlakozás a szobához</button>
-  <p>Card: {{ card }}</p>
-  <p>Room id: {{ room_id }}</p>
-  <button @click="fetch_rooms">Szobák lekérése</button>
-  faszfasz {{ room_id_store.room_id }}
+  <!-- background image -->
+  <div class="bg-image"></div>
+  <BListGroup class="mt-1">
+    <BListGroupItem>
+      <BButton variant="success" @click="login" style="width: 100%;">Bejelentkezés/Regisztráció</BButton>
+    </BListGroupItem>
+    <BListGroupItem>
+      <BButton @click="create_room" variant="warning" style="width: 100%;">Szoba létrehozása</BButton>
+    </BListGroupItem>
+    <BListGroupItem>
+      <BInputGroup prepend="Szoba azonosító">
+        <BFormInput v-model="join_text" />
+        <BButton @click="join_room" variant="info">Csatlakozás</BButton>
+      </BInputGroup>
+    </BListGroupItem>
+  </BListGroup>
 </template>
+
 
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
@@ -17,11 +24,8 @@ import { ref } from 'vue';
 import { createRouter, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useRoomIdStore } from '../stores/room_id';
-
-const room_id = ref('');
-const card = ref('');
+import { BInputGroup, BFormInput, BButton, BContainer, BRow, BCol } from 'bootstrap-vue-next';
 const join_text = ref('');
-
 const room_id_store = useRoomIdStore();
 
 function login() {
@@ -54,7 +58,8 @@ function create_room() {
       'Authorization': localStorage.getItem('access_token')
     }
   }).then(response => {
-    room_id.value = response.data.room_id;
+    router.push({ path: '/play' });
+    room_id_store.room_id = response.data.room_id;
   })
     .catch((error) => {
       console.log(error)
@@ -86,9 +91,18 @@ function join_room() {
     router.push({ path: '/play' });
   })
 }
-const cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-
-function get_card() {
-  card.value = cards[Math.floor(Math.random() * cards.length)];
-}
 </script>
+
+<style scoped>
+.bg-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://images.unsplash.com/photo-1646809014367-2c267bcba69f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+}
+</style>

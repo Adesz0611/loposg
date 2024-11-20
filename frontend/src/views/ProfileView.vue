@@ -18,7 +18,6 @@
             <button type="submit">Adatok frissítése</button>
         </form>
     </div>
-    <p></p>
 </template>
 
 <script setup>

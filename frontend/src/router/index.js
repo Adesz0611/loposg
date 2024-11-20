@@ -4,6 +4,7 @@ import axios from 'axios'
 import PlayView from '@/views/PlayView.vue';
 import AboutView from '@/views/AboutView.vue';
 import ProfileView from '@/views/ProfileView.vue';
+import RulesView from '@/views/RulesView.vue';
 import LeaderboardView from '@/views/LeaderboardView.vue';
 
 const router = createRouter({
@@ -33,6 +34,11 @@ const router = createRouter({
       path: '/leaderboard',
       name: 'leaderboard',
       component: LeaderboardView,
+    },
+    {
+      path: '/rules',
+      name: 'rules',
+      component: RulesView,
     }
   ],
 })
