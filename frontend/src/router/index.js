@@ -6,6 +6,7 @@ import AboutView from '@/views/AboutView.vue';
 import ProfileView from '@/views/ProfileView.vue';
 import RulesView from '@/views/RulesView.vue';
 import LeaderboardView from '@/views/LeaderboardView.vue';
+import { useUsernameStore } from '@/stores/username';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,6 +60,9 @@ router.beforeEach((to, from, next) => {
         localStorage.setItem('isUserLoggedIn', true);
 
         const user = response.data.user_info;
+        const usernameStore = useUsernameStore();
+        usernameStore.username = user.preferred_username;
+        console.log("User logged in:", user.preferred_username);
 
         next();
       })

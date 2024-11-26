@@ -2,13 +2,19 @@
   <!-- background image -->
   <div class="bg-image"></div>
   <BListGroup class="mt-auto">
-    <BListGroupItem>
+    <BListGroupItem v-if="username_store.username == ''">
       <BButton variant="success" @click="login" style="width: 100%;">Bejelentkezés/Regisztráció</BButton>
     </BListGroupItem>
-    <BListGroupItem>
+    <BListGroupItem v-if="username_store.username != ''">
       <BButton @click="create_room" variant="warning" style="width: 100%;">Szoba létrehozása</BButton>
     </BListGroupItem>
+    <BListGroupItem v-if="username_store.username != '' || socket.disconnected">
+      <BButton @click="connect_ws">Websocket létrehozása</BButton>
+    </BListGroupItem>
     <BListGroupItem>
+      socket {{ socket.connected }}
+    </BListGroupItem>
+    <BListGroupItem v-if="username_store.username != ''">
       <BInputGroup prepend="Szoba azonosító">
         <BFormInput v-model="join_text" />
         <BButton @click="join_room" variant="info">Csatlakozás</BButton>
@@ -25,9 +31,14 @@ import axios from 'axios';
 import { useRoomIdStore } from '../stores/room_id';
 import { useUsernameStore } from '../stores/username';
 import { BInputGroup, BFormInput, BButton, BContainer, BRow, BCol } from 'bootstrap-vue-next';
+
+import { socket } from '../socket';
+
+
 const join_text = ref('');
 const room_id_store = useRoomIdStore();
 const username_store = useUsernameStore();
+const router = useRouter();
 
 function login() {
   axios.get('http://localhost:5000/login')
@@ -44,6 +55,7 @@ function logout() {
     token_refresh: localStorage.getItem('refresh_token'),
   },)
     .then(response => {
+      router.push({ path: '/' });
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       alert('Kijelentkeztél! Viszlát user: ' + username_store.username);
@@ -65,22 +77,50 @@ function create_room() {
     .catch((error) => {
       console.log(error)
     });
+  connect_ws();
 }
 
-function fetch_rooms() {
-  axios.get('http://localhost:5000/rooms', {
-    headers: {
-      'Authorization': localStorage.getItem('access_token')
-    }
-  }).then(response => {
-    console.log(response.data);
-  })
-    .catch((error) => {
-      console.log(error)
-    });
+// function fetch_rooms() {
+//   axios.get('http://localhost:5000/rooms', {
+//     headers: {
+//       'Authorization': localStorage.getItem('access_token')
+//     }
+//   }).then(response => {
+//     console.log(response.data);
+//   })
+//     .catch((error) => {
+//       console.log(error)
+//     });
+// }
+
+function connect_ws() {
+  socket.connect();
 }
 
-const router = useRouter();
+function join_ws() {
+  if (localStorage.getItem('access_token') === null) {
+    alert('Nem vagy bejelentkezve!');
+    return;
+  }
+  socket.emit('join_room', { room_id: 798111/*join_text.value*/, bearer: localStorage.getItem('access_token') });
+
+  // listen for the event "joined_room"
+  socket.on('joined_room', (data) => {
+    console.log(data);
+    room_id_store.room_id = data.room_id;
+    //router.push({ path: '/play' });
+  });
+
+  socket.on('error', (data) => {
+    console.log(data);
+  });
+
+  // listen for the event "player_joined"
+  socket.on('player_joined', (data) => {
+    console.log(data);
+  });
+}
+
 function join_room() {
   axios.post('http://localhost:5000/rooms/' + join_text.value + '/join', {
   }, {

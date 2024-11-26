@@ -6,7 +6,7 @@
       <BNavItem href="/leaderboard">Ranglista</BNavItem>
     </BNavbarNav>
     <BNavbarNav class="ml-auto">
-      <BNavItemDropdown text="username">
+      <BNavItemDropdown :text="username_store.username">
         <BDropdownItem href="/profile">Profil</BDropdownItem>
         <BDropdownItem href="/logout">Kijelentkezés</BDropdownItem>
       </BNavItemDropdown>
