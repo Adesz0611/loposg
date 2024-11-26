@@ -166,10 +166,11 @@ async def leave_room_fv(sid, disconnect=False):
         await sio.emit("error", {"msg": "Room not found."}, to=sid)
         return
 
-    username = row["players"][user_id]["name"]
-
     # Remove user from the room's gamestate
     gamestate = json.loads(row["gamestate"])
+    print("gamestate: ", gamestate)
+    print("user_id: ", user_id)
+    username = gamestate["players"][user_id]["name"]
     gamestate["players"].pop(user_id)
     await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 

@@ -90,7 +90,7 @@ function join_ws() {
     return;
   }
 
-  socket.emit('join_room', { room_id: 400314/*join_text.value*/, bearer: localStorage.getItem('access_token') });
+  socket.emit('join_room', { room_id: 798111/*join_text.value*/, bearer: localStorage.getItem('access_token') });
 
   // listen for the event "joined_room"
   socket.on('joined_room', (data) => {
