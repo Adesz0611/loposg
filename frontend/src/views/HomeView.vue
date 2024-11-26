@@ -1,7 +1,7 @@
 <template>
   <!-- background image -->
   <div class="bg-image"></div>
-  <BListGroup class="mt-1">
+  <BListGroup class="mt-auto">
     <BListGroupItem>
       <BButton variant="success" @click="login" style="width: 100%;">Bejelentkezés/Regisztráció</BButton>
     </BListGroupItem>
@@ -19,14 +19,15 @@
 
 
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
 import { ref } from 'vue';
 import { createRouter, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useRoomIdStore } from '../stores/room_id';
+import { useUsernameStore } from '../stores/username';
 import { BInputGroup, BFormInput, BButton, BContainer, BRow, BCol } from 'bootstrap-vue-next';
 const join_text = ref('');
 const room_id_store = useRoomIdStore();
+const username_store = useUsernameStore();
 
 function login() {
   axios.get('http://localhost:5000/login')
@@ -45,7 +46,7 @@ function logout() {
     .then(response => {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      alert('Kijelentkeztél! Viszlát user: ' + response.data.username);
+      alert('Kijelentkeztél! Viszlát user: ' + username_store.username);
     })
     .catch((error) => {
       console.log(error)
@@ -94,6 +95,15 @@ function join_room() {
 </script>
 
 <style scoped>
+.mt-auto {
+  /* center */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: auto;
+  margin-left: auto;
+}
+
 .bg-image {
   position: fixed;
   top: 0;

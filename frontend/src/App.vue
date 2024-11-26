@@ -6,7 +6,7 @@
       <BNavItem href="/leaderboard">Ranglista</BNavItem>
     </BNavbarNav>
     <BNavbarNav class="ml-auto">
-      <BNavItemDropdown :text="username_store.username">
+      <BNavItemDropdown text="username">
         <BDropdownItem href="/profile">Profil</BDropdownItem>
         <BDropdownItem href="/logout">Kijelentkezés</BDropdownItem>
       </BNavItemDropdown>
@@ -20,8 +20,8 @@
 </template>
 
 <script setup>
-import { RouterLink, RouterView } from 'vue-router';
-import { useUsernameStore } from './stores/username';
+import { RouterView } from 'vue-router';
+import { useUsernameStore } from './stores/username.js';
 const username_store = useUsernameStore();
 
 </script>

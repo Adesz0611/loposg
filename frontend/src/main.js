@@ -16,6 +16,6 @@ pinia.use(piniaPluginPersistedstate)
 
 app.use(pinia)
 app.use(router)
-app.use(createBootstrap()) // Important
+app.use(createBootstrap()) 
 
 app.mount('#app')

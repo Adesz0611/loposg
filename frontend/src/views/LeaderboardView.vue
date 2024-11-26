@@ -1,39 +1,45 @@
 <template>
     <div>
-        <header>
-            <h1 style="color: blue;">Ranglista</h1>
-        </header>
+        <BCointainer>
+            <BRow>
+                <BCol>
+                    <BCard>
+                        <BCardHeader class="text-center">
+                            <h1 class="text-primary">Ranglista</h1>
+                        </BCardHeader>
+                        <BCardBody>
+                            <b-table striped hover>
+                                <thead>
+                                    <tr>
+                                        <th>Helyezés</th>
+                                        <th>Felhasználónév</th>
+                                        <th>Pontszám</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1.</td>
+                                        <td>John Doe</td>
+                                        <td>100</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2.</td>
+                                        <td>Jane Doe</td>
+                                        <td>90</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3.</td>
+                                        <td>Jack Doe</td>
+                                        <td>80</td>
+                                    </tr>
+                                </tbody>
+                            </b-table>
+                        </BCardBody>
+                    </BCard>
+                </BCol>
+            </BRow>
+        </BCointainer>
     </div>
-    <div>
-        <p class="text-center">Ez a ranglista nézet</p>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Helyezés</th>
-                    <th>Felhasználónév</th>
-                    <th>Pontszám</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1.</td>
-                    <td>John Doe</td>
-                    <td>100</td>
-                </tr>
-                <tr>
-                    <td>2.</td>
-                    <td>Jane Doe</td>
-                    <td>90</td>
-                </tr>
-                <tr>
-                    <td>3.</td>
-                    <td>Jack Doe</td>
-                    <td>80</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <p></p>
 </template>
 
 <script setup>
