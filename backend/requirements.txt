@@ -2,3 +2,5 @@ quart
 asyncpg
 python-keycloak-async
 quart-cors
+python-socketio[asyncio]
+uvicorn

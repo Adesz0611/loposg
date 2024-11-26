@@ -4,11 +4,13 @@
   <button @click="create_room">Szoba létrehozása</button>
   <button @click="get_card">Lap húzás</button>
   <textarea v-model="join_text" placeholder="Szoba azonosító"></textarea>
-  <button @click="join_room">Csatlakozás a szobához</button>
+  <button @click="connect_ws">Websocket létrehozása</button>
+  <button @click="join_ws">Csatlakozás a szobához</button>
   <p>Card: {{ card }}</p>
   <p>Room id: {{ room_id }}</p>
   <button @click="fetch_rooms">Szobák lekérése</button>
   faszfasz {{ room_id_store.room_id }}
+  socket {{ socket.connected }}
 </template>
 
 <script setup>
@@ -17,6 +19,8 @@ import { ref } from 'vue';
 import { createRouter, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useRoomIdStore } from '../stores/room_id';
+
+import { socket } from '../socket';
 
 const room_id = ref('');
 const card = ref('');
@@ -75,6 +79,36 @@ function fetch_rooms() {
 }
 
 const router = useRouter();
+
+function connect_ws() {
+  socket.connect();
+}
+
+function join_ws() {
+  if (localStorage.getItem('access_token') === null) {
+    alert('Nem vagy bejelentkezve!');
+    return;
+  }
+
+  socket.emit('join_room', { room_id: 400314/*join_text.value*/, bearer: localStorage.getItem('access_token') });
+
+  // listen for the event "joined_room"
+  socket.on('joined_room', (data) => {
+    console.log(data);
+    room_id_store.room_id = data.room_id;
+    //router.push({ path: '/play' });
+  });
+
+  socket.on('error', (data) => {
+    console.log(data);
+  });
+
+  // listen for the event "player_joined"
+  socket.on('player_joined', (data) => {
+    console.log(data);
+  });
+}
+
 function join_room() {
   axios.post('http://localhost:5000/rooms/' + join_text.value + '/join', {
   }, {

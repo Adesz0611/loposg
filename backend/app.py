@@ -2,11 +2,15 @@ from quart import Quart, request, websocket
 import keycloak as kc
 import random, asyncpg, json
 from quart_cors import cors
+import socketio
 
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=["http://localhost:3000"])
 app = Quart(__name__)
 app = cors(app, allow_origin="*")
+asgi_app = socketio.ASGIApp(sio, app)
 
-connected_clients = {}
+
+sio_rooms = {}
 
 openid = kc.KeycloakOpenID(server_url="http://localhost:8080/",
                            client_id="loposg",
@@ -99,46 +103,34 @@ async def fetch_rooms():
     room_ids = [str(x["room_id"]) for x in room_ids]
     return {"rooms": room_ids}
 
-# TODO: websocket csatlakozás
-@app.post("/rooms/<room_id>/join")
-async def join_room_original(room_id):
-    user = await check_user_loggedin(request.headers.get("Authorization"))
-    if user is None:
-        return {"error": "You need to be logged in to join a room."}, 403
+@sio.event
+async def connect(sid, environ):
+    print("connect ", sid)
 
-    user_id = user["sub"]
-    username = user["preferred_username"]
+@sio.on("join_room")
+async def join_room(sid, data):
+    print("raw data: ", data)
+    bearer = data["bearer"]
+    room_id = data["room_id"]
 
-    # Megnézzük, hogy létezik-e a szoba az adatbázisban
+    # check if room_id defined and not empty
+    if not room_id:
+        await sio.emit("error", {"msg": "Room ID is required"}, to=sid)
+        return
+
+    # check if room_id is in the database
     row = await app.pool.fetchrow("SELECT * FROM rooms WHERE room_id = $1", int(room_id))
     if not row:
-        return {"error": "Room not found."}, 404
+        await sio.emit("error", {"msg": "Room not found."}, to=sid)
+        return
     
-    print("user_id:", user_id)
-    print("username:", username)
-
-    user_data = { user_id: {"name": username, "hand": [], "stack": [], "score": 0}}
-
-    # Add user to the room's gamestate
-    gamestate = json.loads(row["gamestate"])
-    gamestate["players"].update(user_data)
-    await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
-    
-    return {"status": "ok", "room_id": row["room_id"]}
-
-@app.websocket("/rooms/<room_id>/join")
-async def join_room(room_id):
-    user = await check_user_loggedin(websocket.headers.get("Authorization"))
+    user = await check_user_loggedin(bearer)
     if user is None:
-        return await websocket.send({ "status": "error", "msg": "You need to be logged in to join a room."})
-
+        await sio.emit("error", {"msg": "You need to be logged in to join a room."}, to=sid)
+        return
+    
     user_id = user["sub"]
     username = user["preferred_username"]
-
-    # Megnézzük, hogy létezik-e a szoba az adatbázisban
-    row = await app.pool.fetchrow("SELECT * FROM rooms WHERE room_id = $1", int(room_id))
-    if not row:
-        return await websocket.send({ "status": "error", "msg": "Room not found."})
 
     user_data = { user_id: {"name": username, "hand": [], "stack": [], "score": 0}}
 
@@ -147,51 +139,65 @@ async def join_room(room_id):
     gamestate["players"].update(user_data)
     await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 
-    if not room_id in connected_clients:
-        connected_clients[room_id] = set()
+    # save user to a socketio room
+    await sio.enter_room(sid, room_id)
+    sio_rooms[sid] = {"user_id": user_id, "room_id": room_id}
 
-    connected_clients[room_id].add(websocket._get_current_object())
+    # send back that the join was successful
+    await sio.emit("joined_room", {"room_id": row["room_id"]}, to=sid)
 
-# TODO: websocket
-@app.websocket("/rooms/<room_id>/leave")
-async def leave_room(room_id):
-    user = await check_user_loggedin(request.headers.get("Authorization"))
-    if user is None:
-        return await websocket.send({ "status": "error", "msg": "You need to be logged in to join a room."})
-    
-    user_id = user["sub"]
+    # print the users in the room
+    print("users in room: ", sio.rooms(sid))
 
-    # Megnézzük, hogy létezik-e a szoba az adatbázisban
+    # send the other players that a new player joined with a player name
+    await sio.emit("player_joined", {"player_name": username}, room=room_id)
+
+async def leave_room_fv(sid, disconnect=False):
+    if sid not in sio_rooms:
+        await sio.emit("error", {"msg": "You are not in a room."}, to=sid)
+        return
+
+    room_id = sio_rooms[sid]["room_id"]
+    user_id = sio_rooms[sid]["user_id"]
+
+    # check if room_id is in the database
     row = await app.pool.fetchrow("SELECT * FROM rooms WHERE room_id = $1", int(room_id))
     if not row:
-        return await websocket.send({ "status": "error", "msg": "Room not found."})
+        await sio.emit("error", {"msg": "Room not found."}, to=sid)
+        return
 
+    username = row["players"][user_id]["name"]
+
+    # Remove user from the room's gamestate
     gamestate = json.loads(row["gamestate"])
     gamestate["players"].pop(user_id)
     await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 
-    connected_clients
-    return {"status": "ok"}
+    # remove user from the socketio room
+    await sio.leave_room(sid, room_id)
+    sio_rooms.pop(sid)
 
-@app.delete("/rooms/<room_id>")
-async def delete_room(room_id):
-    user = await check_user_loggedin(request.headers.get("Authorization"))
-    if user is None:
-        return {"error": "You need to be logged in to join a room."}, 403
-    
-    await app.pool.execute("DELETE FROM rooms WHERE room_id = $1", int(room_id))
+    if not disconnect:
+        # send back that the leave was successful
+        await sio.emit("left_room", {"room_id": row["room_id"]}, to=sid)
 
-    return {"status": "ok"}
+    # check if the room is empty, if so, delete the room
+    if not gamestate["players"]:
+        await app.pool.execute("DELETE FROM rooms WHERE room_id = $1", int(room_id))
+    else:
+        # send the other players that a player left with a player name
+        await sio.emit("player_left", {"player_name": username}, room=room_id)
 
-# @app.websocket("/ws")
-# async def ws():
-#     connected_clients.add(websocket._get_current_object())
+@sio.on("leave_room")
+async def leave_room(sid, data):
+    leave_room_fv(sid)
 
-#     try:
-        
-
-def run() -> None:
-    app.run()
+@sio.event
+async def disconnect(sid):
+    if sid in sio_rooms:
+        await leave_room_fv(sid, True)
+    print("disconnect ", sid)
 
 if __name__ == "__main__":
-    run()
+    import uvicorn
+    uvicorn.run(asgi_app, host="0.0.0.0", port=5000)
