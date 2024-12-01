@@ -4,24 +4,24 @@
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="playing-cards-assets/png/back.png" :show="true" :number="5" />
-                    <Card path="playing-cards-assets/png/CQ.png" />
+                    <Card path="png/back.png" :show="true" :number="5" />
+                    <Card path="png/CQ.png" />
                 </div>
             </div>
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="playing-cards-assets/png/back.png" :show="true" :number="5" />
-                    <Card path="playing-cards-assets/png/CQ.png" />
+                    <Card path="png/back.png" :show="true" :number="5" />
+                    <Card path="png/CQ.png" />
                 </div>
             </div>
         </div>
         <div class="kozepe w-100">
-            <div class="player">
+            <div class="player" style="opacity: 0">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="playing-cards-assets/png/back.png" :show="true" :number="5" />
-                    <Card path="playing-cards-assets/png/CQ.png" />
+                    <Card path="png/back.png" :show="true" :number="5" />
+                    <Card path="png/CQ.png" />
                 </div>
             </div>
             <div class="asztal">
@@ -31,24 +31,23 @@
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="playing-cards-assets/png/back.png" :show="true" :number="5" />
-                    <Card path="playing-cards-assets/png/CQ.png" />
+                    <Card path="png/back.png" :show="true" :number="5" />
+                    <Card path="png/CQ.png" />
                 </div>
             </div>
         </div>
         <div class="alja w-100">
             <div class="player">
-                <p id="username">Játékosnév</p>
+                <p id="username">Én</p>
                 <div class="hand">
-                    <Card path="playing-cards-assets/png/back.png" :show="true" :number="5" />
-                    <Card path="playing-cards-assets/png/CQ.png" />
+                    <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'" />
                 </div>
             </div>
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="playing-cards-assets/png/back.png" :show="true" :number="5" />
-                    <Card path="playing-cards-assets/png/CQ.png" />
+                    <Card path="png/back.png" :show="true" :number="5" />
+                    <Card path="png/CQ.png" />
                 </div>
             </div>
         </div>
@@ -56,10 +55,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onBeforeMount } from 'vue';
+import { socket } from '../socket';
 import Card from '../components/Card.vue';
 
 const props = defineProps({ room_id: String });
+
+onBeforeMount(() => {
+    socket.emit('join_room', { room_id: props.room_id, bearer: localStorage.getItem('access_token') });
+    socket.on('error', (data) => {
+        alert("Figyelj öcsi, baj van: " + data.msg);
+    });
+    socket.on('player_joined', (data) => {
+        console.log("Játékos csatlakozott: " + data.player_name);
+    });
+});
+
+const my_cards = ref(['C8', 'HQ', 'SA']);
 
 function start_game() {
     console.log('start game');
@@ -81,7 +93,7 @@ function start_game() {
 
 #username {
     text-align: center;
-    font-size: 1rem;
+    font-size: 1.5rem;
 }
 
 #room-id {
@@ -97,8 +109,8 @@ function start_game() {
 
 .kozepe {
     display: flex;
-    justify-content: space-between;
-    gap: 20%;
+    /* justify-content: space-between; */
+    gap: 5%;
 }
 
 .alja {
@@ -113,7 +125,7 @@ function start_game() {
     flex-direction: column;
     background-color: #C19A6B;
     height: 200px;
-    width: 40%;
+    width: 100%;
     padding: 1rem;
     border-radius: 1rem;
 }
@@ -121,8 +133,8 @@ function start_game() {
 .player {
     display: flex;
     flex-direction: column;
-    background-color: #ffffff;
-    border: 1px solid #000000;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
     padding: 1rem;
     margin: 0.5rem 0;
     width: 100%;
@@ -151,14 +163,5 @@ function start_game() {
     justify-content: center;
     width: 100%;
     padding: 1rem;
-}
-
-.player {
-    background-color: #ffffff;
-    border: 1px solid #000000;
-    padding: 1rem;
-    margin: 0.5rem 0;
-    width: 100%;
-    text-align: center;
 }
 </style>

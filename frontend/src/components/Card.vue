@@ -34,6 +34,12 @@ export default {
     align-items: center;
     font-size: 24px;
     background-color: white;
+    padding: 2px;
+}
+
+.card img {
+    width: 100%;
+    height: 100%;
 }
 
 .number-overlay {
