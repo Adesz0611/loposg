@@ -16,7 +16,7 @@ user_id2sid = {}
 openid = kc.KeycloakOpenID(server_url="http://localhost:8080/",
                            client_id="loposg",
                            realm_name="master",
-                           client_secret_key="Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq",
+                           client_secret_key="HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD",
 )
 
 async def check_user_loggedin(token):

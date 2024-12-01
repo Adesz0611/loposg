@@ -1,6 +1,6 @@
 <template>
     <div>
-        <BCointainer>
+            <BCointainer>
             <BRow>
                 <BCol>
                     <BCard>

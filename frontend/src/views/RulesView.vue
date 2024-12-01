@@ -1,4 +1,5 @@
 <template>
+  <div class="container">
   <header>
     <h1>LopósG Szabályai</h1>
   </header>
@@ -39,6 +40,7 @@
 
   <h2>8. Győzelem</h2>
   <p>A legtöbb pontot szerző játékos nyer.</p>
+  </div>
 </template>
 
 <style>

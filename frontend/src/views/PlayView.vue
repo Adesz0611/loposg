@@ -1,34 +1,32 @@
 <template>
-    <div>
-        <div class="background">
-            <header>
-                <h1>Room ID: {{ room_id_store.room_id }}</h1>
-            </header>
-            <div class="table">
-                <div class="player" id="player1">Player 1</div>
-                <div class="player" id="player2">Player 2</div>
-                <div class="player" id="player3">Player 3</div>
-                <div class="player" id="player4">Player 4</div>
+    <div class="background">
+        <div class="teteje w-100"></div>
+        <div class="kozepe w-100">
+            <div class="asztal">
+                <p id="room-id">{{ props.room_id }}</p>
+                <button class="btn btn-primary d-block mt-5 mx-auto" @click="start_game">Játék indítása</button>
+            </div>
+            <div class="asztal">
+                <p id="room-id">{{ props.room_id }}</p>
+                <button class="btn btn-primary d-block mt-5 mx-auto" @click="start_game">Játék indítása</button>
+            </div>
+            <div class="asztal">
+                <p id="room-id">{{ props.room_id }}</p>
+                <button class="btn btn-primary d-block mt-5 mx-auto" @click="start_game">Játék indítása</button>
             </div>
         </div>
+        <div class="alja w-100"></div>
     </div>
-
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useRoomIdStore } from '../stores/room_id';
-import { createRouter, useRouter } from 'vue-router';
-const router = useRouter();
 
-const roomId = ref('');
-const room_id_store = useRoomIdStore();
+const props = defineProps({ room_id: String });
 
-
-// if (!room_id_store.room_id) {
-//     router.push({ name: 'home' });
-// }
-
+function start_game() {
+    console.log('start game');
+}
 </script>
 
 <style scoped>
@@ -36,11 +34,41 @@ const room_id_store = useRoomIdStore();
     background-image: url('https://images.pexels.com/photos/326333/pexels-photo-326333.jpeg');
     background-size: cover;
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - 112px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#room-id {
+    text-align: center;
+    font-size: 2rem;
+}
+
+.teteje {
+    display: flex;
+    justify-content: space-between;
+}
+
+.alja {
+    display: flex;
+    justify-content: space-between;
+}
+
+.kozepe {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.asztal {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    background-color: #C19A6B;
+    height: 200px;
+    width: 40%;
+    padding: 1rem;
+    border-radius: 1rem;
 }
 
 .table {

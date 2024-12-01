@@ -8,11 +8,13 @@
     <BNavbarNav class="ml-auto">
       <BNavItemDropdown :text="username_store.username">
         <BDropdownItem href="/profile">Profil</BDropdownItem>
-        <BDropdownItem href="/logout">Kijelentkezés</BDropdownItem>
+        <BDropdownItem @click="logout">Kijelentkezés</BDropdownItem>
       </BNavItemDropdown>
     </BNavbarNav>
   </BNavbar>
-  <RouterView />
+  <div style="padding-top: 56px; padding-bottom: 56px;">
+    <RouterView />
+  </div>
   <footer>
     <img src="https://vuejs.org/images/logo.png" alt="Vue.js logo" />
     <p style="text-align: right; color: white">&copy;LopósG kártyajáték</p>
@@ -22,7 +24,35 @@
 <script setup>
 import { RouterView } from 'vue-router';
 import { useUsernameStore } from './stores/username.js';
+import { onBeforeMount } from 'vue';
+import axios from 'axios';
+import router from './router/index.js';
+
+onBeforeMount(() => {
+  if (localStorage.getItem('access_token')) {
+    console.log('access token found');
+    console.log('username: ' + localStorage.getItem('username'));
+    username_store.username = localStorage.getItem('username');
+  }
+});
 const username_store = useUsernameStore();
+
+function logout() {
+  axios.post('http://localhost:5000/logout', {
+    token_refresh: localStorage.getItem('refresh_token'),
+  },
+  ).then(response => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('isUserLoggedIn');
+    localStorage.removeItem('username');
+    username_store.username = '';
+    router.push({ path: '/' });
+  })
+  .catch((error) => {
+    console.log(error)
+  });
+}
 
 </script>
 

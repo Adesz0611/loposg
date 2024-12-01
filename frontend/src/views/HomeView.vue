@@ -1,39 +1,43 @@
 <template>
   <!-- background image -->
+  <div class="container">
   <div class="bg-image"></div>
-  <BListGroup class="mt-auto">
-    <BListGroupItem v-if="username_store.username == ''">
-      <BButton variant="success" @click="login" style="width: 100%;">Bejelentkezés/Regisztráció</BButton>
-    </BListGroupItem>
-    <BListGroupItem v-if="username_store.username != ''">
-      <BButton @click="create_room" variant="warning" style="width: 100%;">Szoba létrehozása</BButton>
-    </BListGroupItem>
-    <BListGroupItem v-if="username_store.username != '' || socket.disconnected">
-      <BButton @click="connect_ws">Websocket létrehozása</BButton>
-    </BListGroupItem>
-    <BListGroupItem>
-      socket {{ socket.connected }}
-    </BListGroupItem>
-    <BListGroupItem v-if="username_store.username != ''">
-      <BInputGroup prepend="Szoba azonosító">
-        <BFormInput v-model="join_text" />
-        <BButton @click="join_room" variant="info">Csatlakozás</BButton>
-      </BInputGroup>
-    </BListGroupItem>
+  <div class="d-flex flex-column" style="min-height: calc(100vh - 112px);">
+  <BListGroup class="my-auto">
+    <div v-if="!isLoggedIn">
+      <BListGroupItem>
+        <BButton variant="success" @click="login" style="width: 100%;">Bejelentkezés/Regisztráció</BButton>
+      </BListGroupItem>
+    </div>
+    <div v-else>
+      <BListGroupItem>
+        <BButton @click="create_room" variant="warning" style="width: 100%;">Szoba létrehozása</BButton>
+      </BListGroupItem>
+      <BListGroupItem>
+        <BInputGroup prepend="Szoba azonosító">
+          <BFormInput v-model="join_text" />
+          <BButton @click="join_room" variant="info">Csatlakozás</BButton>
+        </BInputGroup>
+      </BListGroupItem>
+    </div>
   </BListGroup>
+  </div>
+  </div>
 </template>
 
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { createRouter, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useRoomIdStore } from '../stores/room_id';
 import { useUsernameStore } from '../stores/username';
 import { BInputGroup, BFormInput, BButton, BContainer, BRow, BCol } from 'bootstrap-vue-next';
 
-import { socket } from '../socket';
+import { socket, state } from '../socket';
 
+const ws_connected = computed(() => state.connected );
+const isLoggedIn = computed(() => username_store.username != '');
 
 const join_text = ref('');
 const room_id_store = useRoomIdStore();
@@ -71,7 +75,7 @@ function create_room() {
       'Authorization': localStorage.getItem('access_token')
     }
   }).then(response => {
-    router.push({ path: '/play' });
+    router.push({ path: '/' + response.data.room_id });
     room_id_store.room_id = response.data.room_id;
   })
     .catch((error) => {
@@ -94,6 +98,7 @@ function create_room() {
 // }
 
 function connect_ws() {
+  console.log('connecting websocket');
   socket.connect();
 }
 
@@ -135,14 +140,13 @@ function join_room() {
 </script>
 
 <style scoped>
-.mt-auto {
-  /* center */
+/* .mt-auto {
   display: flex;
   flex-direction: column;
   justify-content: center;
   margin-top: auto;
   margin-left: auto;
-}
+} */
 
 .bg-image {
   position: fixed;

@@ -17,8 +17,9 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/play',
+      path: '/:room_id',
       name: 'play',
+      props: true,
       component: PlayView,
     },
     {
@@ -58,10 +59,12 @@ router.beforeEach((to, from, next) => {
         localStorage.setItem('access_token', access_token);
         localStorage.setItem('refresh_token', refresh_token);
         localStorage.setItem('isUserLoggedIn', true);
-
+        
         const user = response.data.user_info;
         const usernameStore = useUsernameStore();
         usernameStore.username = user.preferred_username;
+
+        localStorage.setItem('username', user.preferred_username);
         console.log("User logged in:", user.preferred_username);
 
         next();
