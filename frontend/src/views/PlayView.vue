@@ -4,15 +4,15 @@
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="png/back.png" :show="true" :number="5" />
+                    <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                     <Card path="png/CQ.png" :show="true" :number="2" />
                 </div>
             </div>
-            <div class="player">
+            <div class=" player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="png/back.png" :show="true" :number="5" />
                     <Card path="png/CQ.png" :show="true" :number="5" />
+                    <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                 </div>
             </div>
         </div>
@@ -20,7 +20,7 @@
             <div class="player" style="opacity: 1">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="png/back.png" :show="true" :number="5" />
+                    <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                     <Card path="png/HJ.png" :show="true" :number="3" />
                 </div>
             </div>
@@ -28,24 +28,24 @@
                 <div v-show="!game_started" class="pregame">
                     <p id="room-id">A szoba azonosítója:</p>
                     <p id="room-id">{{ props.room_id }}</p>
-                    <button class="btn btn-primary d-block mt-5 mx-auto" @click="start_game">Játék indítása</button>
+                    <button class="btn btn-primary d-block mx-auto" @click="start_game">Játék indítása</button>
                 </div>
                 <div v-show="game_started" class="midgame">
-                    <Card path="png/back.png" :show="false" />
+                    <Card path="png/back.png" :show="false" style="scale: 1.1;" />
                     <Card path="png/DA.png" :show="false" />
                 </div>
             </div>
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
-                    <Card path="png/back.png" :show="true" :number="5" />
                     <Card path="png/CQ.png" :show="true" :number="5" />
+                    <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                 </div>
             </div>
         </div>
         <div class="alja w-100">
             <div class="player">
-                <p id="username">{{ username_store.useUsernameStore }}</p>
+                <p id="username">{{ username_store.username }} (én)</p>
                 <div class="player_hand">
                     <Card path="png/SA.png" :show="true" :number="6" style="transform: scale(1.3);" />
                     <div class="hand">
@@ -135,7 +135,7 @@ function start_game() {
 .kozepe {
     display: flex;
     /* justify-content: space-between; */
-    gap: 5%;
+    gap: 4%;
 }
 
 .alja {
@@ -147,7 +147,8 @@ function start_game() {
 .asztal {
     display: flex;
     flex-direction: column;
-    gap: -10%;
+    justify-content: center;
+    gap: 1rem;
     background-color: #C19A6B;
     height: 200px;
     width: 100%;
@@ -169,7 +170,7 @@ function start_game() {
 .hand {
     display: flex;
     justify-content: center;
-    gap: 1%;
+    gap: 2%;
 }
 
 .player_hand {
@@ -184,15 +185,6 @@ function start_game() {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 1rem;
-}
-
-.table {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
     justify-content: center;
     width: 100%;
     padding: 1rem;

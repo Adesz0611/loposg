@@ -103,7 +103,7 @@ function connect_ws() {
 }
 
 function join_ws() {
-  if (localStorage.getItem('access_token') === null) {
+  if (localStorage.getItem('access_token') == null) {
     alert('Nem vagy bejelentkezve!');
     return;
   }
@@ -127,25 +127,12 @@ function join_ws() {
 }
 
 function join_room() {
-  if (localStorage.getItem('access_token') === null) {
+  if (localStorage.getItem('access_token') == null) {
     alert('Nem vagy bejelentkezve!');
     return;
   }
-  socket.emit('join_room', { room_id: join_text.value, bearer: localStorage.getItem('access_token') });
-  socket.on('joined_room', (data) => {
-    console.log(data);
-    room_id_store.room_id = join_text.value;
-    router.push({ path: '/' + join_text.value });
-  });
-  //   axios.post('http://localhost:5000/' + join_text.value, {
-  //   }, {
-  //     headers: {
-  //       'Authorization': localStorage.getItem('access_token')
-  //     }
-  //   }).then(response => {
-  //     room_id_store.room_id = response.data.room_id;
-  //     router.push({ path: '/play' });
-  //   })
+  router.push({ path: '/' + join_text.value });
+
 }
 </script>
 
