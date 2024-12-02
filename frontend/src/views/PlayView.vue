@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="kozepe w-100">
-            <div class="player" style="opacity: 1">
+            <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
@@ -49,7 +49,8 @@
                 <div class="player_hand">
                     <Card path="png/SA.png" :show="true" :number="6" style="transform: scale(1.3);" />
                     <div class="hand">
-                        <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'" />
+                        <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'"
+                            @click="selected_card = card" :selected="selected_card == card" />
                     </div>
                     <BButtonGroup>
                         <BButton pill variant="primary" @click="discard">Kártya eldobása</BButton>
@@ -67,7 +68,6 @@ import { ref, onBeforeMount } from 'vue';
 import { socket } from '../socket';
 import Card from '../components/Card.vue';
 import { useUsernameStore } from '@/stores/username';
-// import { BButton, BButtonGroup } from 'bootstrap-vue-next/dist/bootstrap-vue-next.umd';
 
 const props = defineProps({ room_id: String });
 const username_store = useUsernameStore();
@@ -81,10 +81,19 @@ onBeforeMount(() => {
     socket.on('player_joined', (data) => {
         console.log("Játékos csatlakozott: " + data.player_name);
     });
+    socket.on('own_gamestate', (data) => {
+        my_cards.value = data.hand;
+        console.log('gamestate: ', data);
+    });
+    socket.on('global_gamestate', (data) => {
+        console.log('gamestate: ', data);
+    });
+
 });
 
 const game_started = ref(false);
-const my_cards = ref(['C8', 'HQ', 'SA']);
+const my_cards = ref([]);
+const selected_card = ref('');
 
 function discard() {
     console.log('discard');
@@ -99,7 +108,20 @@ function steal() {
 }
 
 function start_game() {
-    console.log('start game');
+    console.log('starting game...');
+    socket.emit('start_game', { room_id: props.room_id });
+    socket.on('error', (data) => {
+        alert("Figyelj öcsi, baj van: " + data.msg);
+    });
+    socket.on('own_gamestate', (data) => {
+        my_cards.value = data.hand;
+        console.log('gamestate: ', data);
+    });
+    socket.on('global_gamestate', (data) => {
+        console.log('gamestate: ', data);
+    });
+    game_started.value = true;
+    console.log('game started');
 }
 </script>
 
