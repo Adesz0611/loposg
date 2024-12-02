@@ -1,60 +1,30 @@
 <template>
-    <div>
-            <BCointainer>
-            <BRow>
-                <BCol>
-                    <BCard>
-                        <BCardHeader class="text-center">
-                            <h1 class="text-primary">Ranglista</h1>
-                        </BCardHeader>
-                        <BCardBody>
-                            <b-table striped hover>
-                                <thead>
-                                    <tr>
-                                        <th>Helyezés</th>
-                                        <th>Felhasználónév</th>
-                                        <th>Pontszám</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1.</td>
-                                        <td>John Doe</td>
-                                        <td>100</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.</td>
-                                        <td>Jane Doe</td>
-                                        <td>90</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.</td>
-                                        <td>Jack Doe</td>
-                                        <td>80</td>
-                                    </tr>
-                                </tbody>
-                            </b-table>
-                        </BCardBody>
-                    </BCard>
-                </BCol>
-            </BRow>
-        </BCointainer>
-    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Felhasználónév</th>
+                <th>Pontszám</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="row in leaderboard" :key="row.username">
+                <td>{{ row.username }}</td>
+                <td>{{ row.score }}</td>
+            </tr>
+        </tbody>
+    </table>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useRoomIdStore } from '../stores/room_id';
-import { createRouter, useRouter } from 'vue-router';
-const router = useRouter();
 
-const roomIdStore = useRoomIdStore();
-const userName = ref('John Doe');
-const userEmail = ref('john.doe@example.com');
-
-function goToHome() {
-    router.push('/');
-}
+const leaderboard = ref([
+    { username: 'Lencse', score: 100 },
+    { username: 'Jampy', score: 90 },
+    { username: 'Dr. Momó', score: 80 },
+    { username: 'Leslie', score: 70 },
+    { username: 'Geckó', score: 60 },
+]);
 
 </script>
 
