@@ -1,5 +1,5 @@
 <template>
-    <div class="card">
+    <div class="card" :class="{ selected: $props.selected }">
         <img :src="path" alt="card" width="100%" height="100%" />
         <div v-if="show" class="number-overlay">{{ number }}x</div>
     </div>
@@ -17,6 +17,10 @@ export default {
         number: {
             type: Number,
             default: 1,
+        },
+        selected: {
+            type: Boolean,
+            default: false,
         },
     }
 }
@@ -40,6 +44,10 @@ export default {
 .card img {
     width: 100%;
     height: 100%;
+}
+
+.selected {
+    border: 2px solid red;
 }
 
 .number-overlay {
