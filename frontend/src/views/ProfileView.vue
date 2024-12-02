@@ -1,10 +1,9 @@
 <template>
     <div>
         <header>
-            <h1 style="color: blue;">Profil</h1>
+            <!-- <BThead style="color: blue;">Profil</BThead> -->
         </header>
     </div>
-    <p class="text-center">Ez a profil nézet</p>
     <div>
         <form @submit.prevent="updateProfile">
             <div>

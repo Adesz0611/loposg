@@ -5,49 +5,57 @@
                 <p id="username">Játékosnév</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" />
-                    <Card path="png/CQ.png" />
+                    <Card path="png/CQ.png" :show="true" :number="2" />
                 </div>
             </div>
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" />
-                    <Card path="png/CQ.png" />
+                    <Card path="png/CQ.png" :show="true" :number="5" />
                 </div>
             </div>
         </div>
         <div class="kozepe w-100">
-            <div class="player" style="opacity: 0">
+            <div class="player" style="opacity: 1">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" />
-                    <Card path="png/CQ.png" />
+                    <Card path="png/HJ.png" :show="true" :number="3" />
                 </div>
             </div>
             <div class="asztal">
-                <p id="room-id">{{ props.room_id }}</p>
-                <button class="btn btn-primary d-block mt-5 mx-auto" @click="start_game">Játék indítása</button>
+                <div v-show="!game_started" class="pregame">
+                    <p id="room-id">A szoba azonosítója:</p>
+                    <p id="room-id">{{ props.room_id }}</p>
+                    <button class="btn btn-primary d-block mt-5 mx-auto" @click="start_game">Játék indítása</button>
+                </div>
+                <div v-show="game_started" class="midgame">
+                    <Card path="png/back.png" :show="false" />
+                    <Card path="png/DA.png" :show="false" />
+                </div>
             </div>
             <div class="player">
                 <p id="username">Játékosnév</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" />
-                    <Card path="png/CQ.png" />
+                    <Card path="png/CQ.png" :show="true" :number="5" />
                 </div>
             </div>
         </div>
         <div class="alja w-100">
             <div class="player">
-                <p id="username">Én</p>
-                <div class="hand">
-                    <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'" />
-                </div>
-            </div>
-            <div class="player">
-                <p id="username">Játékosnév</p>
-                <div class="hand">
-                    <Card path="png/back.png" :show="true" :number="5" />
-                    <Card path="png/CQ.png" />
+                <p id="username">{{ username_store.useUsernameStore }}</p>
+                <div class="player_hand">
+                    <Card path="png/SA.png" :show="true" :number="6" style="transform: scale(1.3);" />
+                    <div class="hand">
+                        <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'" />
+                    </div>
+                    <BButtonGroup>
+                        <BButton pill variant="primary" @click="discard">Kártya eldobása</BButton>
+                        <BButton pill variant="success" @click="pair">Kártya lerakása</BButton>
+                        <BButton pill variant="danger" @click="steal">Lopás</BButton>
+                    </BButtonGroup>
                 </div>
             </div>
         </div>
@@ -58,8 +66,12 @@
 import { ref, onBeforeMount } from 'vue';
 import { socket } from '../socket';
 import Card from '../components/Card.vue';
+import { useUsernameStore } from '@/stores/username';
+// import { BButton, BButtonGroup } from 'bootstrap-vue-next/dist/bootstrap-vue-next.umd';
 
 const props = defineProps({ room_id: String });
+const username_store = useUsernameStore();
+
 
 onBeforeMount(() => {
     socket.emit('join_room', { room_id: props.room_id, bearer: localStorage.getItem('access_token') });
@@ -71,7 +83,20 @@ onBeforeMount(() => {
     });
 });
 
+const game_started = ref(false);
 const my_cards = ref(['C8', 'HQ', 'SA']);
+
+function discard() {
+    console.log('discard');
+}
+
+function pair() {
+    console.log('pair');
+}
+
+function steal() {
+    console.log('steal');
+}
 
 function start_game() {
     console.log('start game');
@@ -115,14 +140,14 @@ function start_game() {
 
 .alja {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     gap: 20%;
 }
-
 
 .asztal {
     display: flex;
     flex-direction: column;
+    gap: -10%;
     background-color: #C19A6B;
     height: 200px;
     width: 100%;
@@ -145,6 +170,14 @@ function start_game() {
     display: flex;
     justify-content: center;
     gap: 1%;
+}
+
+.player_hand {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8%;
 }
 
 .stack {

@@ -1,27 +1,27 @@
 <template>
   <!-- background image -->
   <div class="container">
-  <div class="bg-image"></div>
-  <div class="d-flex flex-column" style="min-height: calc(100vh - 112px);">
-  <BListGroup class="my-auto">
-    <div v-if="!isLoggedIn">
-      <BListGroupItem>
-        <BButton variant="success" @click="login" style="width: 100%;">Bejelentkezés/Regisztráció</BButton>
-      </BListGroupItem>
+    <div class="bg-image"></div>
+    <div class="d-flex flex-column" style="min-height: calc(100vh - 112px);">
+      <BListGroup class="my-auto">
+        <div v-if="!isLoggedIn">
+          <BListGroupItem>
+            <BButton variant="success" @click="login" style="width: 100%;">Bejelentkezés/Regisztráció</BButton>
+          </BListGroupItem>
+        </div>
+        <div v-else>
+          <BListGroupItem>
+            <BButton @click="create_room" variant="warning" style="width: 100%;">Szoba létrehozása</BButton>
+          </BListGroupItem>
+          <BListGroupItem>
+            <BInputGroup prepend="Szoba azonosító">
+              <BFormInput v-model="join_text" />
+              <BButton @click="join_room" variant="info">Csatlakozás</BButton>
+            </BInputGroup>
+          </BListGroupItem>
+        </div>
+      </BListGroup>
     </div>
-    <div v-else>
-      <BListGroupItem>
-        <BButton @click="create_room" variant="warning" style="width: 100%;">Szoba létrehozása</BButton>
-      </BListGroupItem>
-      <BListGroupItem>
-        <BInputGroup prepend="Szoba azonosító">
-          <BFormInput v-model="join_text" />
-          <BButton @click="join_room" variant="info">Csatlakozás</BButton>
-        </BInputGroup>
-      </BListGroupItem>
-    </div>
-  </BListGroup>
-  </div>
   </div>
 </template>
 
@@ -36,7 +36,7 @@ import { BInputGroup, BFormInput, BButton, BContainer, BRow, BCol } from 'bootst
 
 import { socket, state } from '../socket';
 
-const ws_connected = computed(() => state.connected );
+const ws_connected = computed(() => state.connected);
 const isLoggedIn = computed(() => username_store.username != '');
 
 const join_text = ref('');
@@ -127,15 +127,25 @@ function join_ws() {
 }
 
 function join_room() {
-  axios.post('http://localhost:5000/rooms/' + join_text.value + '/join', {
-  }, {
-    headers: {
-      'Authorization': localStorage.getItem('access_token')
-    }
-  }).then(response => {
-    room_id_store.room_id = response.data.room_id;
-    router.push({ path: '/play' });
-  })
+  if (localStorage.getItem('access_token') === null) {
+    alert('Nem vagy bejelentkezve!');
+    return;
+  }
+  socket.emit('join_room', { room_id: join_text.value, bearer: localStorage.getItem('access_token') });
+  socket.on('joined_room', (data) => {
+    console.log(data);
+    room_id_store.room_id = join_text.value;
+    router.push({ path: '/' + join_text.value });
+  });
+  //   axios.post('http://localhost:5000/' + join_text.value, {
+  //   }, {
+  //     headers: {
+  //       'Authorization': localStorage.getItem('access_token')
+  //     }
+  //   }).then(response => {
+  //     room_id_store.room_id = response.data.room_id;
+  //     router.push({ path: '/play' });
+  //   })
 }
 </script>
 

@@ -42,6 +42,7 @@ function logout() {
     token_refresh: localStorage.getItem('refresh_token'),
   },
   ).then(response => {
+    alert('Kijelentkeztél! Viszlát user: ' + username_store.username);
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('isUserLoggedIn');
@@ -49,9 +50,9 @@ function logout() {
     username_store.username = '';
     router.push({ path: '/' });
   })
-  .catch((error) => {
-    console.log(error)
-  });
+    .catch((error) => {
+      console.log(error)
+    });
 }
 
 </script>
