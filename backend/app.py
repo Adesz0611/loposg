@@ -69,6 +69,15 @@ def count_trailing_occurrences(lst):
             break
     return count
 
+def score_for_a_card(card):
+    if card[1] in "234567":
+        return 5
+    else:
+        return 10
+
+def score_for_a_stack(stack):
+    return sum(score_for_a_card(card) for card in stack)
+
 @app.get("/login")
 async def login():
     auth_url = await openid.auth_url("http://localhost:3000/", scope="email profile openid")
@@ -288,7 +297,28 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
 
     gamestate["players"][user_id]["hand"].remove(card)
     gamestate["cards"].append(card)
-    gamestate["current_player"] = (gamestate["current_player"] + 1) % len(gamestate["player_order"])
+
+    # check if every player has 0 cards in their hands
+    if all(len(gamestate["players"][player_id]["hand"]) == 0 for player_id in gamestate["player_order"]):
+        # deal max 5 cards to each player if there are smaller than 5 times number of players in the card pool deal the remaining cards equally if cannot deal equally the remaining cards then print game over
+        if len(gamestate["card_pool"]) < 5 * len(gamestate["player_order"]):
+            num_of_cards = len(gamestate["card_pool"]) / len(gamestate["player_order"])
+        else:
+            num_of_cards = 5
+        
+        if (num_of_cards == 0):
+            await sio.emit("game_over", {"msg": "No more cards in the card pool."}, room=room_id)
+            return
+
+        for player_id in gamestate["players"]:
+            gamestate["players"][player_id]["hand"] = gamestate["card_pool"][:num_of_cards]
+            gamestate["card_pool"] = gamestate["card_pool"][num_of_cards:]
+
+    curr_player = (gamestate["current_player"] + 1) % len(gamestate["player_order"])
+    while len(gamestate["players"][gamestate["player_order"][curr_player]]["hand"]) == 0:
+        curr_player = (curr_player + 1) % len(gamestate["player_order"])
+    gamestate["current_player"] = curr_player
+
     await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 
     global_gamestate = {
@@ -325,7 +355,27 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
     gamestate["players"][user_id]["hand"].remove(card1)
     gamestate["players"][user_id]["hand"].remove(card2)
     gamestate["players"][user_id]["stack"].extend([card1, card2])
-    gamestate["current_player"] = (gamestate["current_player"] + 1) % len(gamestate["player_order"])
+
+    if all(len(gamestate["players"][player_id]["hand"]) == 0 for player_id in gamestate["player_order"]):
+        # deal max 5 cards to each player if there are smaller than 5 times number of players in the card pool deal the remaining cards equally if cannot deal equally the remaining cards then print game over
+        if len(gamestate["card_pool"]) < 5 * len(gamestate["player_order"]):
+            num_of_cards = len(gamestate["card_pool"]) / len(gamestate["player_order"])
+        else:
+            num_of_cards = 5
+        
+        if (num_of_cards == 0):
+            await sio.emit("game_over", {"msg": "No more cards in the card pool."}, room=room_id)
+            return
+
+        for player_id in gamestate["players"]:
+            gamestate["players"][player_id]["hand"] = gamestate["card_pool"][:num_of_cards]
+            gamestate["card_pool"] = gamestate["card_pool"][num_of_cards:]
+
+    curr_player = (gamestate["current_player"] + 1) % len(gamestate["player_order"])
+    while len(gamestate["players"][gamestate["player_order"][curr_player]]["hand"]) == 0:
+        curr_player = (curr_player + 1) % len(gamestate["player_order"])
+    gamestate["current_player"] = curr_player
+
     await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 
     global_gamestate = {
