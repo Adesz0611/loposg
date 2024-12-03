@@ -55,6 +55,19 @@ async def generate_room_id(room_ids):
         room_id = ''.join([str(random.randint(0, 9)) for _ in range(6)])
         if room_id not in room_ids:
             return room_id
+# megszámolja, hogy a stack tetején hány egyforma kártya van
+# például ['HA', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'HJ', 'HQ', 'HK', 'QK'] -> 2
+def count_trailing_occurrences(lst):
+    if len(lst) < 2:
+        return 0
+    last_card = lst[-1][1]
+    count = 0
+    for card in reversed(lst):
+        if card[1] == last_card:
+            count += 1
+        else:
+            break
+    return count
 
 @app.get("/login")
 async def login():
@@ -219,7 +232,9 @@ async def start_game(sid, data):
         "current_player": gamestate["players"][gamestate["player_order"][gamestate["current_player"]]]["name"],
     }
 
-    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
+    #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
+    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
+    global_gamestate["players_hand"] = [len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]]
 
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
@@ -284,7 +299,10 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
         "card_pool": gamestate["card_pool"],
         "players_stack": [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]],
     }
-    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
+    #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
+    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
+    global_gamestate["players_hand"] = [len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]]
+
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
     for player_id in gamestate["players"]:
@@ -317,7 +335,10 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
         "player_order": gamestate["player_order"],
         "card_pool": gamestate["card_pool"],
     }
-    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
+    #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
+    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
+    global_gamestate["players_hand"] = [len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]]
+
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
     for player_id in gamestate["players"]:
