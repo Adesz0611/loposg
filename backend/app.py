@@ -307,7 +307,21 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
             num_of_cards = 5
         
         if (num_of_cards == 0):
-            await sio.emit("game_over", {"msg": "No more cards in the card pool."}, room=room_id)
+            # calculate the scores
+            for player_id in gamestate["players"]:
+                gamestate["players"][player_id]["score"] = score_for_a_stack(gamestate["players"][player_id]["stack"])
+
+            await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
+
+            # calculate the winner
+            winner = max(gamestate["players"], key=lambda x: gamestate["players"][x]["score"])
+            score = winner["score"]
+            winner_username = winner["name"]
+            
+            await sio.emit("game_over", {"msg": "No more cards in the card pool.", "winner": winner_username, "winner_score": score}, room=room_id)
+            # send the store to the players
+            for player_id in gamestate["players"]:
+                await sio.emit("own_gamestate", gamestate["players"][player_id], to=user_id2sid[player_id])
             return
 
         for player_id in gamestate["players"]:
@@ -356,6 +370,7 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
     gamestate["players"][user_id]["hand"].remove(card2)
     gamestate["players"][user_id]["stack"].extend([card1, card2])
 
+    # check if every player has 0 cards in their hands
     if all(len(gamestate["players"][player_id]["hand"]) == 0 for player_id in gamestate["player_order"]):
         # deal max 5 cards to each player if there are smaller than 5 times number of players in the card pool deal the remaining cards equally if cannot deal equally the remaining cards then print game over
         if len(gamestate["card_pool"]) < 5 * len(gamestate["player_order"]):
@@ -364,7 +379,21 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
             num_of_cards = 5
         
         if (num_of_cards == 0):
-            await sio.emit("game_over", {"msg": "No more cards in the card pool."}, room=room_id)
+            # calculate the scores
+            for player_id in gamestate["players"]:
+                gamestate["players"][player_id]["score"] = score_for_a_stack(gamestate["players"][player_id]["stack"])
+
+            await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
+
+            # calculate the winner
+            winner = max(gamestate["players"], key=lambda x: gamestate["players"][x]["score"])
+            score = winner["score"]
+            winner_username = winner["name"]
+            
+            await sio.emit("game_over", {"msg": "No more cards in the card pool.", "winner": winner_username, "winner_score": score}, room=room_id)
+            # send the store to the players
+            for player_id in gamestate["players"]:
+                await sio.emit("own_gamestate", gamestate["players"][player_id], to=user_id2sid[player_id])
             return
 
         for player_id in gamestate["players"]:
