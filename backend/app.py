@@ -154,7 +154,7 @@ async def join_room(sid, data):
     print("users in room: ", sio.rooms(sid))
 
     # send the other players that a new player joined with a player name
-    await sio.emit("player_joined", {"player_name": username}, room=room_id)
+    await sio.emit("player_joined", {"player_name": username, "player_count" : len(gamestate["players"])}, room=room_id)
 
     # send the other players the new player order
     await sio.emit("player_order", {"player_order": gamestate["player_order"]}, room=room_id)
@@ -189,6 +189,10 @@ async def start_game(sid, data):
 
     # shuffle the card pool
     random.shuffle(gamestate["card_pool"])
+    
+    # draw one card for the main discard pile
+    gamestate["cards"] = gamestate["card_pool"][:1]
+    gamestate["card_pool"] = gamestate["card_pool"][1:]
 
     # deal the cards to the players
     for player_id in gamestate["players"]:
@@ -208,6 +212,9 @@ async def start_game(sid, data):
     global_gamestate = {
         "current_player": gamestate["current_player"],
         "main_deck": gamestate["cards"],
+        "started": gamestate["started"],
+        "player_order": gamestate["player_order"],
+        "card_pool": gamestate["card_pool"],
     }
 
     global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
@@ -247,12 +254,12 @@ async def card_action(sid, data):
     
     action = data["action"]
 
-    if action == "throw":
-        action_throw(sid, data, gamestate, user_id, room_id)
+    if action == "discard":
+        await action_discard(sid, data, gamestate, user_id, room_id)
     elif action == "pair":
-        action_pair(sid, data, gamestate, user_id, room_id)
+        await action_pair(sid, data, gamestate, user_id, room_id)
 
-async def action_throw(sid, data, gamestate, user_id, room_id):
+async def action_discard(sid, data, gamestate, user_id, room_id):
     if "card" not in data:
         await sio.emit("error", {"msg": "Card is required."}, to=sid)
         return
@@ -270,6 +277,10 @@ async def action_throw(sid, data, gamestate, user_id, room_id):
     global_gamestate = {
         "current_player": gamestate["current_player"],
         "main_deck": gamestate["cards"],
+        "started": gamestate["started"],
+        "player_order": gamestate["player_order"],
+        "card_pool": gamestate["card_pool"],
+        "players_stack": [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]],
     }
     global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
@@ -300,6 +311,9 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
     global_gamestate = {
         "current_player": gamestate["current_player"],
         "main_deck": gamestate["cards"],
+        "started": gamestate["started"],
+        "player_order": gamestate["player_order"],
+        "card_pool": gamestate["card_pool"],
     }
     global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     await sio.emit("global_gamestate", global_gamestate, room=room_id)

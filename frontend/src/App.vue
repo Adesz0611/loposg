@@ -33,6 +33,7 @@ onBeforeMount(() => {
     console.log('access token found');
     console.log('username: ' + localStorage.getItem('username'));
     username_store.username = localStorage.getItem('username');
+    // TODO: get username from keycloak
   }
 });
 const username_store = useUsernameStore();

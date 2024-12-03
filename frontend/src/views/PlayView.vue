@@ -1,15 +1,15 @@
 <template>
     <div class="background">
         <div class="teteje w-100">
-            <div class="player">
-                <p id="username">Játékosnév</p>
+            <div class="player" v-show="player_count > 2">
+                <p id="username">{{ players[2] }}</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                     <Card path="png/CQ.png" :show="true" :number="2" />
                 </div>
             </div>
-            <div class=" player">
-                <p id="username">Játékosnév</p>
+            <div class="player" v-show="player_count > 3">
+                <p id="username">{{ players[3] }}</p>
                 <div class="hand">
                     <Card path="png/CQ.png" :show="true" :number="5" />
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
@@ -17,8 +17,8 @@
             </div>
         </div>
         <div class="kozepe w-100">
-            <div class="player">
-                <p id="username">Játékosnév</p>
+            <div class="player" v-show="player_count > 1">
+                <p id="username">{{ players[1] }}</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                     <Card path="png/HJ.png" :show="true" :number="3" />
@@ -31,12 +31,14 @@
                     <button class="btn btn-primary d-block mx-auto" @click="start_game">Játék indítása</button>
                 </div>
                 <div v-show="game_started" class="midgame">
-                    <Card path="png/back.png" :show="false" style="scale: 1.1;" />
-                    <Card path="png/DA.png" :show="false" />
+                    <Card path="png/back.png" :show="true" :number="remaining_card_count" style="scale: 1.1;" />
+                    <Card
+                        :path="main_stack[main_stack.length - 1] ? 'png/' + main_stack[main_stack.length - 1] + '.png' : 'png/empty.png'"
+                        :show="false" />
                 </div>
             </div>
-            <div class="player">
-                <p id="username">Játékosnév</p>
+            <div class="player" v-show="player_count > 4">
+                <p id="username">{{ players[4] }}</p>
                 <div class="hand">
                     <Card path="png/CQ.png" :show="true" :number="5" />
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
@@ -47,7 +49,7 @@
             <div class="player">
                 <p id="username">{{ username_store.username }} (én)</p>
                 <div class="player_hand">
-                    <Card path="png/SA.png" :show="true" :number="6" style="transform: scale(1.3);" />
+                    <Card path="png/empty.png" :show="false" :number="6" style="transform: scale(1.2);" />
                     <div class="hand">
                         <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'"
                             @click="selected_card = card" :selected="selected_card == card" />
@@ -64,10 +66,11 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount } from 'vue';
+import { ref, onBeforeMount, onBeforeUpdate } from 'vue';
 import { socket } from '../socket';
 import Card from '../components/Card.vue';
 import { useUsernameStore } from '@/stores/username';
+import { main } from '@popperjs/core';
 
 const props = defineProps({ room_id: String });
 const username_store = useUsernameStore();
@@ -80,32 +83,30 @@ onBeforeMount(() => {
     });
     socket.on('player_joined', (data) => {
         console.log("Játékos csatlakozott: " + data.player_name);
+        players.value.push(data.player_name);
+        player_count.value = data.player_count;
     });
     socket.on('own_gamestate', (data) => {
         my_cards.value = data.hand;
-        console.log('gamestate: ', data);
+        console.log('o gamestate: ', data);
     });
     socket.on('global_gamestate', (data) => {
-        console.log('gamestate: ', data);
+        game_started.value = data.started;
+        main_stack.value = data.main_deck;
+        remaining_card_count.value = data.card_pool.length;
+        console.log('g gamestate: ', data);
     });
 
 });
 
+const players = ref([]);
+const player_count = ref(0);
+const main_stack = ref([]);
 const game_started = ref(false);
 const my_cards = ref([]);
 const selected_card = ref('');
-
-function discard() {
-    console.log('discard');
-}
-
-function pair() {
-    console.log('pair');
-}
-
-function steal() {
-    console.log('steal');
-}
+const my_stack = ref(['CQ', 'DQ', 'HQ'])
+const remaining_card_count = ref(0);
 
 function start_game() {
     console.log('starting game...');
@@ -113,16 +114,32 @@ function start_game() {
     socket.on('error', (data) => {
         alert("Figyelj öcsi, baj van: " + data.msg);
     });
-    socket.on('own_gamestate', (data) => {
-        my_cards.value = data.hand;
-        console.log('gamestate: ', data);
-    });
-    socket.on('global_gamestate', (data) => {
-        console.log('gamestate: ', data);
-    });
-    game_started.value = true;
-    console.log('game started');
 }
+function discard() {
+    console.log(players[1]);
+    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, action: 'discard' });
+    socket.on('error', (data) => {
+        alert("Figyelj öcsi, baj van: " + data.msg);
+    });
+
+}
+
+function pair() {
+    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, action: 'pair' });
+    socket.on('error', (data) => {
+        alert("Figyelj öcsi, baj van: " + data.msg);
+    });
+    console.log('pair');
+}
+
+function steal() {
+    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, action: 'steal' });
+    socket.on('error', (data) => {
+        alert("Figyelj öcsi, baj van: " + data.msg);
+    });
+    console.log('steal');
+}
+
 </script>
 
 <style scoped>
@@ -178,6 +195,13 @@ function start_game() {
     border-radius: 1rem;
 }
 
+.midgame {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    scale: 1.4;
+}
+
 .player {
     display: flex;
     flex-direction: column;
@@ -200,7 +224,7 @@ function start_game() {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 8%;
+    gap: 7%;
 }
 
 .stack {

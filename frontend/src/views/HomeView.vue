@@ -54,20 +54,20 @@ function login() {
     });
 }
 
-function logout() {
-  axios.post('http://localhost:5000/logout', {
-    token_refresh: localStorage.getItem('refresh_token'),
-  },)
-    .then(response => {
-      router.push({ path: '/' });
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      alert('Kijelentkeztél! Viszlát user: ' + username_store.username);
-    })
-    .catch((error) => {
-      console.log(error)
-    });
-}
+// function logout() {
+//   axios.post('http://localhost:5000/logout', {
+//     token_refresh: localStorage.getItem('refresh_token'),
+//   },)
+//     .then(response => {
+//       router.push({ path: '/' });
+//       localStorage.removeItem('access_token');
+//       localStorage.removeItem('refresh_token');
+//       alert('Kijelentkeztél! Viszlát user: ' + username_store.username);
+//     })
+//     .catch((error) => {
+//       console.log(error)
+//     });
+// }
 
 function create_room() {
   axios.post('http://localhost:5000/rooms', {}, {
@@ -84,18 +84,6 @@ function create_room() {
   connect_ws();
 }
 
-// function fetch_rooms() {
-//   axios.get('http://localhost:5000/rooms', {
-//     headers: {
-//       'Authorization': localStorage.getItem('access_token')
-//     }
-//   }).then(response => {
-//     console.log(response.data);
-//   })
-//     .catch((error) => {
-//       console.log(error)
-//     });
-// }
 
 function connect_ws() {
   console.log('connecting websocket');
