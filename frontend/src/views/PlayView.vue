@@ -52,7 +52,7 @@
                     <Card path="png/empty.png" :show="false" :number="6" style="transform: scale(1.2);" />
                     <div class="hand">
                         <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'"
-                            @click="selected_card = card" :selected="selected_card == card" />
+                            @click="selected_card = card" :selected="card == selected_card" />
                     </div>
                     <BButtonGroup>
                         <BButton pill variant="primary" @click="discard">Kártya eldobása</BButton>
@@ -70,7 +70,6 @@ import { ref, onBeforeMount, onBeforeUpdate } from 'vue';
 import { socket } from '../socket';
 import Card from '../components/Card.vue';
 import { useUsernameStore } from '@/stores/username';
-import { main } from '@popperjs/core';
 
 const props = defineProps({ room_id: String });
 const username_store = useUsernameStore();
@@ -125,7 +124,8 @@ function discard() {
 }
 
 function pair() {
-    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, action: 'pair' });
+    let pair_card = my_cards.value.find(card => card[1] == selected_card.value[1] && card != selected_card.value);
+    socket.emit('card_action', { room_id: props.room_id, cards: [selected_card.value, pair_card], action: 'pair' });
     socket.on('error', (data) => {
         alert("Figyelj öcsi, baj van: " + data.msg);
     });

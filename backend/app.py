@@ -298,7 +298,7 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
         await sio.emit("error", {"msg": "You don't have these cards."}, to=sid)
         return
 
-    if card1[:-1] != card2[:-1]:  # Assuming card format is like 'HA', 'H2', etc.
+    if card1[1] != card2[1]:  # Assuming card format is like 'HA', 'H2', etc.
         await sio.emit("error", {"msg": "Cards are not a pair."}, to=sid)
         return
 
@@ -320,6 +320,9 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
 
     for player_id in gamestate["players"]:
         await sio.emit("own_gamestate", gamestate["players"][player_id], to=user_id2sid[player_id])
+
+async def action_steal(sid, data, gamestate, user_id, room_id):
+    return 1
 
 async def leave_room_fv(sid, disconnect=False):
     if sid not in sio_rooms:
