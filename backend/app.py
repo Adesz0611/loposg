@@ -16,7 +16,7 @@ user_id2sid = {}
 openid = kc.KeycloakOpenID(server_url="http://localhost:8080/",
                            client_id="loposg",
                            realm_name="master",
-                           client_secret_key="Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq", # Rablo: HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD 
+                           client_secret_key="HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD", # Rablo: HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD 
                                                                                  # Adri: Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq
 )
 
@@ -157,7 +157,8 @@ async def join_room(sid, data):
     await sio.emit("player_joined", {"player_name": username, "player_count" : len(gamestate["players"])}, room=room_id)
 
     # send the other players the new player order
-    await sio.emit("player_order", {"player_order": gamestate["player_order"]}, room=room_id)
+    player_order_names = [gamestate["players"][player_id]["name"] for player_id in gamestate["player_order"]]
+    await sio.emit("player_order", {"player_order": player_order_names}, room=room_id)
 
 # Start a game
 @sio.on("start_game")
@@ -210,11 +211,12 @@ async def start_game(sid, data):
         await sio.emit("own_gamestate", gamestate["players"][player_id], to=user_id2sid[player_id])
 
     global_gamestate = {
-        "current_player": gamestate["current_player"],
-        "main_deck": gamestate["cards"],
+        "current_player": gamestate["players"][gamestate["player_order"][gamestate["current_player"]]]["name"],
+        "main_stack": gamestate["cards"],
         "started": gamestate["started"],
         "player_order": gamestate["player_order"],
         "card_pool": gamestate["card_pool"],
+        "current_player": gamestate["players"][gamestate["player_order"][gamestate["current_player"]]]["name"],
     }
 
     global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
@@ -275,8 +277,8 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
     await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 
     global_gamestate = {
-        "current_player": gamestate["current_player"],
-        "main_deck": gamestate["cards"],
+        "current_player": gamestate["players"][gamestate["player_order"][gamestate["current_player"]]]["name"],
+        "main_stack": gamestate["cards"],
         "started": gamestate["started"],
         "player_order": gamestate["player_order"],
         "card_pool": gamestate["card_pool"],
@@ -309,8 +311,8 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
     await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 
     global_gamestate = {
-        "current_player": gamestate["current_player"],
-        "main_deck": gamestate["cards"],
+        "current_player": gamestate["players"][gamestate["player_order"][gamestate["current_player"]]]["name"],
+        "main_stack": gamestate["cards"],
         "started": gamestate["started"],
         "player_order": gamestate["player_order"],
         "card_pool": gamestate["card_pool"],

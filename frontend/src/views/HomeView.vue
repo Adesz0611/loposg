@@ -54,21 +54,6 @@ function login() {
     });
 }
 
-// function logout() {
-//   axios.post('http://localhost:5000/logout', {
-//     token_refresh: localStorage.getItem('refresh_token'),
-//   },)
-//     .then(response => {
-//       router.push({ path: '/' });
-//       localStorage.removeItem('access_token');
-//       localStorage.removeItem('refresh_token');
-//       alert('Kijelentkeztél! Viszlát user: ' + username_store.username);
-//     })
-//     .catch((error) => {
-//       console.log(error)
-//     });
-// }
-
 function create_room() {
   axios.post('http://localhost:5000/rooms', {}, {
     headers: {
@@ -81,37 +66,6 @@ function create_room() {
     .catch((error) => {
       console.log(error)
     });
-  connect_ws();
-}
-
-
-function connect_ws() {
-  console.log('connecting websocket');
-  socket.connect();
-}
-
-function join_ws() {
-  if (localStorage.getItem('access_token') == null) {
-    alert('Nem vagy bejelentkezve!');
-    return;
-  }
-  socket.emit('join_room', { room_id: 798111/*join_text.value*/, bearer: localStorage.getItem('access_token') });
-
-  // listen for the event "joined_room"
-  socket.on('joined_room', (data) => {
-    console.log(data);
-    room_id_store.room_id = data.room_id;
-    //router.push({ path: '/play' });
-  });
-
-  socket.on('error', (data) => {
-    console.log(data);
-  });
-
-  // listen for the event "player_joined"
-  socket.on('player_joined', (data) => {
-    console.log(data);
-  });
 }
 
 function join_room() {

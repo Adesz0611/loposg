@@ -1,14 +1,14 @@
 <template>
     <div class="background">
         <div class="teteje w-100">
-            <div class="player" v-show="player_count > 2">
-                <p id="username">{{ players[2] }}</p>
+            <div class="player" :class="{ current_player: players[1] == current_player}" v-show="player_count > 2">
+                <p id="username">{{ players[1] }}</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                     <Card path="png/CQ.png" :show="true" :number="2" />
                 </div>
             </div>
-            <div class="player" v-show="player_count > 3">
+            <div class="player" :class="{ current_player: players[3] == current_player}" v-show="player_count > 4">
                 <p id="username">{{ players[3] }}</p>
                 <div class="hand">
                     <Card path="png/CQ.png" :show="true" :number="5" />
@@ -17,8 +17,8 @@
             </div>
         </div>
         <div class="kozepe w-100">
-            <div class="player" v-show="player_count > 1">
-                <p id="username">{{ players[1] }}</p>
+            <div class="player" :class="{ current_player: players[0] == current_player}" v-show="player_count > 1">
+                <p id="username">{{ players[0] }}</p>
                 <div class="hand">
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
                     <Card path="png/HJ.png" :show="true" :number="3" />
@@ -37,8 +37,8 @@
                         :show="false" />
                 </div>
             </div>
-            <div class="player" v-show="player_count > 4">
-                <p id="username">{{ players[4] }}</p>
+            <div class="player" :class="{ current_player: players[2] == current_player}" v-show="player_count > 3">
+                <p id="username">{{ players[2] }}</p>
                 <div class="hand">
                     <Card path="png/CQ.png" :show="true" :number="5" />
                     <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="alja w-100">
-            <div class="player">
+            <div class="player" :class="{ current_player: username_store.username == current_player}">
                 <p id="username">{{ username_store.username }} (én)</p>
                 <div class="player_hand">
                     <Card path="png/empty.png" :show="false" :number="6" style="transform: scale(1.2);" />
@@ -66,7 +66,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, onBeforeUpdate } from 'vue';
+import { ref, onBeforeMount, onBeforeUpdate, computed } from 'vue';
 import { socket } from '../socket';
 import Card from '../components/Card.vue';
 import { useUsernameStore } from '@/stores/username';
@@ -80,10 +80,15 @@ onBeforeMount(() => {
     socket.on('error', (data) => {
         alert("Figyelj öcsi, baj van: " + data.msg);
     });
-    socket.on('player_joined', (data) => {
-        console.log("Játékos csatlakozott: " + data.player_name);
-        players.value.push(data.player_name);
-        player_count.value = data.player_count;
+    // socket.on('player_joined', (data) => {
+    //     console.log("Játékos csatlakozott: " + data.player_name);
+    //     players.value.push(data.player_name);
+    //     player_count.value = data.player_count;
+    // });
+    socket.on('player_order', (data) => {
+        console.log("Játékos sorrend: ", data.player_order);
+        const filtered = data.player_order.filter(player => player != username_store.username);
+        players.value = filtered;
     });
     socket.on('own_gamestate', (data) => {
         my_cards.value = data.hand;
@@ -91,15 +96,18 @@ onBeforeMount(() => {
     });
     socket.on('global_gamestate', (data) => {
         game_started.value = data.started;
-        main_stack.value = data.main_deck;
+        main_stack.value = data.main_stack;
         remaining_card_count.value = data.card_pool.length;
         console.log('g gamestate: ', data);
+        console.log("current player: ", data.current_player);
+        current_player.value = data.current_player;
     });
 
 });
 
 const players = ref([]);
-const player_count = ref(0);
+const player_count = computed(() => players.value.length + 1);
+const current_player = ref('');
 const main_stack = ref([]);
 const game_started = ref(false);
 const my_cards = ref([]);
@@ -110,33 +118,19 @@ const remaining_card_count = ref(0);
 function start_game() {
     console.log('starting game...');
     socket.emit('start_game', { room_id: props.room_id });
-    socket.on('error', (data) => {
-        alert("Figyelj öcsi, baj van: " + data.msg);
-    });
 }
 function discard() {
-    console.log(players[1]);
     socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, action: 'discard' });
-    socket.on('error', (data) => {
-        alert("Figyelj öcsi, baj van: " + data.msg);
-    });
-
 }
 
 function pair() {
     let pair_card = my_cards.value.find(card => card[1] == selected_card.value[1] && card != selected_card.value);
     socket.emit('card_action', { room_id: props.room_id, cards: [selected_card.value, pair_card], action: 'pair' });
-    socket.on('error', (data) => {
-        alert("Figyelj öcsi, baj van: " + data.msg);
-    });
     console.log('pair');
 }
 
 function steal() {
     socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, action: 'steal' });
-    socket.on('error', (data) => {
-        alert("Figyelj öcsi, baj van: " + data.msg);
-    });
     console.log('steal');
 }
 
@@ -211,6 +205,10 @@ function steal() {
     margin: 0.5rem 0;
     width: 100%;
     text-align: center;
+}
+
+.current_player {
+    background-color: rgba(175, 225, 175, 0.5) !important;
 }
 
 .hand {
