@@ -4,7 +4,7 @@
             <div class="player" :class="{ current_player: players[1] == current_player }" v-show="player_count > 2">
                 <p id="username">{{ players[1] }}</p>
                 <div class="hand">
-                    <Card :path="() ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
+                    <Card :path="(true) ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
                         style="transform: scale(1.2);" />
                     <Card path="png/CQ.png" :show="true" :number="2" />
                 </div>
