@@ -16,7 +16,7 @@ user_id2sid = {}
 openid = kc.KeycloakOpenID(server_url="http://localhost:8080/",
                            client_id="loposg",
                            realm_name="master",
-                           client_secret_key="HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD", # Rablo: HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD 
+                           client_secret_key="Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq", # Rablo: HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD 
                                                                                  # Adri: Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq
 )
 
@@ -242,9 +242,9 @@ async def start_game(sid, data):
     }
 
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
-    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["players_hand"] = [len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]]
-
+    #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
+    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
+    global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
 @sio.on("card_action")
@@ -302,7 +302,7 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
     if all(len(gamestate["players"][player_id]["hand"]) == 0 for player_id in gamestate["player_order"]):
         # deal max 5 cards to each player if there are smaller than 5 times number of players in the card pool deal the remaining cards equally if cannot deal equally the remaining cards then print game over
         if len(gamestate["card_pool"]) < 5 * len(gamestate["player_order"]):
-            num_of_cards = len(gamestate["card_pool"]) / len(gamestate["player_order"])
+            num_of_cards = len(gamestate["card_pool"]) // len(gamestate["player_order"])
         else:
             num_of_cards = 5
         
@@ -314,11 +314,13 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
             await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
 
             # calculate the winner
-            winner = max(gamestate["players"], key=lambda x: gamestate["players"][x]["score"])
-            score = winner["score"]
-            winner_username = winner["name"]
-            
-            await sio.emit("game_over", {"msg": "No more cards in the card pool.", "winner": winner_username, "winner_score": score}, room=room_id)
+            max_score = gamestate["players"][max(gamestate["players"], key=lambda x: gamestate["players"][x]["score"])]["score"]
+            #get the id of the max score
+            winner_id = [key for key in gamestate["players"] if gamestate["players"][key]["score"] == max_score][0]
+            winner_username = gamestate["players"][winner_id]["name"]
+            print("winner: ", winner_username)
+            print("score: ", max_score)         
+            await sio.emit("game_over", {"msg": "No more cards in the card pool.", "winner": winner_username, "winner_score": max_score}, room=room_id)
             # send the store to the players
             for player_id in gamestate["players"]:
                 await sio.emit("own_gamestate", gamestate["players"][player_id], to=user_id2sid[player_id])
@@ -341,12 +343,11 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
         "started": gamestate["started"],
         "player_order": gamestate["player_order"],
         "card_pool": gamestate["card_pool"],
-        "players_stack": [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]],
     }
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
-    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["players_hand"] = [len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]]
-
+    #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
+    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
+    global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
     for player_id in gamestate["players"]:
@@ -374,7 +375,7 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
     if all(len(gamestate["players"][player_id]["hand"]) == 0 for player_id in gamestate["player_order"]):
         # deal max 5 cards to each player if there are smaller than 5 times number of players in the card pool deal the remaining cards equally if cannot deal equally the remaining cards then print game over
         if len(gamestate["card_pool"]) < 5 * len(gamestate["player_order"]):
-            num_of_cards = len(gamestate["card_pool"]) / len(gamestate["player_order"])
+            num_of_cards = len(gamestate["card_pool"]) // len(gamestate["player_order"])
         else:
             num_of_cards = 5
         
@@ -415,17 +416,46 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
         "card_pool": gamestate["card_pool"],
     }
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
-    global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["players_hand"] = [len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]]
-
+    # global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
+    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
+    global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
     for player_id in gamestate["players"]:
         await sio.emit("own_gamestate", gamestate["players"][player_id], to=user_id2sid[player_id])
 
 async def action_steal(sid, data, gamestate, user_id, room_id):
-    return 1
+    if "card" not in data:
+        await sio.emit("error", {"msg": "Card is required."}, to=sid)
+        return
 
+    card = data["card"]
+    target = data["target"]
+
+    #TODO: do it for all the similar cards
+
+    for i in range(count_trailing_occurrences(gamestate["players"][target]["stack"])):
+        gamestate["players"][target]["stack"].pop(0)
+    gamestate["players"][user_id]["hand"].remove(card)
+    gamestate["players"][user_id]["stack"].append(card)
+
+    await app.pool.execute("UPDATE rooms SET gamestate = $1 WHERE room_id = $2", json.dumps(gamestate), int(room_id))
+
+    global_gamestate = {
+        "current_player": gamestate["players"][gamestate["player_order"][gamestate["current_player"]]]["name"],
+        "main_stack": gamestate["cards"],
+        "started": gamestate["started"],
+        "player_order": gamestate["player_order"],
+        "card_pool": gamestate["card_pool"],
+    }
+    # global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
+    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
+    global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
+    await sio.emit("global_gamestate", global_gamestate, room=room_id)
+
+    for player_id in gamestate["players"]:
+        await sio.emit("own_gamestate", gamestate["players"][player_id], to=user_id2sid[player_id])
+    
 async def leave_room_fv(sid, disconnect=False):
     if sid not in sio_rooms:
         await sio.emit("error", {"msg": "You are not in a room."}, to=sid)

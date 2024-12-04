@@ -4,16 +4,19 @@
             <div class="player" :class="{ current_player: players[1] == current_player }" v-show="player_count > 2">
                 <p id="username">{{ players[1] }}</p>
                 <div class="hand">
-                    <Card :path="(true) ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
-                        style="transform: scale(1.2);" />
-                    <Card path="png/CQ.png" :show="true" :number="2" />
+                    <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[1]]"
+                        style="scale: 1.1;" />
+                    <!-- <Card :path="(true) ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
+                        style="transform: scale(1.2);" /> -->
+                    <Card path="png/empty.png" :show="false" :number="2" />
                 </div>
             </div>
             <div class="player" :class="{ current_player: players[3] == current_player }" v-show="player_count > 4">
                 <p id="username">{{ players[3] }}</p>
                 <div class="hand">
-                    <Card path="png/CQ.png" :show="true" :number="5" />
-                    <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
+                    <Card path="png/empty.png" :show="false" :number="5" />
+                    <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[3]]"
+                        style="scale: 1.1;" />
                 </div>
             </div>
         </div>
@@ -21,8 +24,11 @@
             <div class="player" :class="{ current_player: players[0] == current_player }" v-show="player_count > 1">
                 <p id="username">{{ players[0] }}</p>
                 <div class="hand">
-                    <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
-                    <Card path="png/HJ.png" :show="true" :number="3" />
+                    <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[0]]"
+                        style="scale: 1.1;" />
+                    <!-- <Card v-show="players_stack[0].length == 0" path="png/empty.png" :show="false" :number="1" /> -->
+                    <!-- <Card :path="'png/' + player_stack[players[0]][0] + '.png'" :show="true" -->
+                    <!-- style="transform: scale(1.2);" /> -->
                 </div>
             </div>
             <div class="asztal">
@@ -41,8 +47,9 @@
             <div class="player" :class="{ current_player: players[2] == current_player }" v-show="player_count > 3">
                 <p id="username">{{ players[2] }}</p>
                 <div class="hand">
-                    <Card path="png/CQ.png" :show="true" :number="5" />
-                    <Card path="png/back.png" :show="true" :number="5" style="scale: 1.1;" />
+                    <Card path="png/empty.png" :show="false" :number="5" />
+                    <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[2]]"
+                        style="scale: 1.1;" />
                 </div>
             </div>
         </div>
@@ -50,8 +57,7 @@
             <div class="player" :class="{ current_player: username_store.username == current_player }">
                 <p id="username">{{ username_store.username }} (én)</p>
                 <div class="player_hand">
-                    <Card :path="'png/' + my_stack[my_stack.length - 1] + '.png'" :show="false"
-                        style="transform: scale(1.2);" />
+                    <Card :path="'png/' + my_stack[0] + '.png'" :show="false" style="transform: scale(1.2);" />
                     <div class="hand">
                         <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'"
                             @click="selected_card = card" :selected="card == selected_card" />
@@ -64,6 +70,9 @@
                 </div>
             </div>
         </div>
+        <BModal v-model="game_over" centered ok-only title="Vége a játéknak"> A győztes: {{ winner }} - {{ max_score
+            }}pt
+        </BModal>
     </div>
 </template>
 
@@ -82,11 +91,6 @@ onBeforeMount(() => {
     socket.on('error', (data) => {
         alert("Figyelj öcsi, baj van: " + data.msg);
     });
-    // socket.on('player_joined', (data) => {
-    //     console.log("Játékos csatlakozott: " + data.player_name);
-    //     players.value.push(data.player_name);
-    //     player_count.value = data.player_count;
-    // });
     socket.on('player_order', (data) => {
         console.log("Játékos sorrend: ", data.player_order);
         const filtered = data.player_order.filter(player => player != username_store.username);
@@ -103,21 +107,37 @@ onBeforeMount(() => {
         remaining_card_count.value = data.card_pool.length;
         current_player.value = data.current_player;
         player_stack.value = data.player_stack;
+        console.log(player_stack.value);
+        players_hand.value = data.players_hand;
         console.log('g gamestate: ', data);
+    });
+    socket.on('game_over', (data) => {
+        winner.value = data.winner;
+        max_score.value = data.winner_score;
+        game_over.value = true;
     });
 
 });
+const game_started = ref(false);
 
 const players = ref([]);
 const player_count = computed(() => players.value.length + 1);
 const current_player = ref('');
-const main_stack = ref([]);
-const game_started = ref(false);
-const my_cards = ref([]);
-const selected_card = ref('');
-const my_stack = ref(['empty']);
-const player_stack = ref([['empty'], ['empty'], ['empty'], ['empty']]);
+
 const remaining_card_count = ref(0);
+const main_stack = ref([]);
+
+const player_stack = ref([[]]);
+const players_hand = ref({});
+
+
+const my_cards = ref([]);
+const my_stack = ref(['empty']);
+const selected_card = ref('');
+
+const winner = ref('');
+const max_score = ref(0);
+const game_over = ref(false);
 
 function start_game() {
     console.log('starting game...');
@@ -134,7 +154,9 @@ function pair() {
 }
 
 function steal() {
-    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, action: 'steal' });
+    alert('Válaszd ki, hogy kitől szeretnél lopni!');
+
+    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, target: target_user, action: 'steal' });
     console.log('steal');
 }
 
