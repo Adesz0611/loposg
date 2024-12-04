@@ -19,6 +19,13 @@ openid = kc.KeycloakOpenID(server_url="http://localhost:8080/",
                            client_secret_key="Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq", # Rablo: HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD 
                                                                                  # Adri: Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq
 )
+keycloak_admin = kc.KeycloakAdmin(server_url="http://localhost:8080/",
+                                    username="admin",
+                                    password="admin",
+                                    realm_name="master",
+                                    verify=True,
+                                    auto_refresh_token=["get", "post", "put", "delete"])
+
 
 async def check_user_loggedin(token):
     try:
@@ -126,6 +133,32 @@ async def fetch_rooms():
     room_ids = await app.pool.fetch("SELECT room_id FROM rooms")
     room_ids = [str(x["room_id"]) for x in room_ids]
     return {"rooms": room_ids}
+
+@app.post("/profile")
+async def edit_profile():
+    user = await check_user_loggedin(request.headers.get("Authorization"))
+    if user is None:
+        return {"error": "You need to be logged in to edit your profile."}, 403
+
+    data = await request.get_json()
+    new_username = data.get("username")
+    if new_username:
+        await keycloak_admin.update_user(user["sub"], {"username": new_username})
+    new_password = data.get("password")
+    if new_password:
+        await keycloak_admin.set_user_password(user["sub"], new_password, temporary=False)
+    return {"status": "ok"}
+
+@app.get("/leaderboard")
+async def leaderboard():
+    leaderboard = await app.pool.fetch("SELECT * FROM leaderboard ORDER BY score DESC")
+    # leaderboard = [{"user_id": x["user_id"], "score": x["score"]} for x in leaderboard]
+    leaderboard = []
+    for x in leaderboard:
+        user = await keycloak_admin.get_user(x["user_id"])
+        x["username"] = user["username"]
+        leaderboard.append(x)
+    return {"leaderboard": leaderboard}
 
 @sio.event
 async def connect(sid, environ):
@@ -243,7 +276,7 @@ async def start_game(sid, data):
 
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
@@ -318,8 +351,12 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
             #get the id of the max score
             winner_id = [key for key in gamestate["players"] if gamestate["players"][key]["score"] == max_score][0]
             winner_username = gamestate["players"][winner_id]["name"]
-            print("winner: ", winner_username)
-            print("score: ", max_score)         
+            row = await app.pool.fetchrow("SELECT * FROM leaderboard WHERE user_id = $1", (winner_id))
+            if not row:
+                await app.pool.execute("INSERT INTO leaderboard (user_id, score) VALUES ($1, $2)", (winner_id), max_score)
+            else:
+                await app.pool.execute("UPDATE leaderboard SET score = $1 WHERE user_id = $2", max_score, (winner_id))
+                
             await sio.emit("game_over", {"msg": "No more cards in the card pool.", "winner": winner_username, "winner_score": max_score}, room=room_id)
             # send the store to the players
             for player_id in gamestate["players"]:
@@ -346,7 +383,7 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
     }
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
@@ -417,7 +454,7 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
     }
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     # global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
@@ -435,7 +472,7 @@ async def action_steal(sid, data, gamestate, user_id, room_id):
     #TODO: do it for all the similar cards
 
     for i in range(count_trailing_occurrences(gamestate["players"][target]["stack"])):
-        gamestate["players"][target]["stack"].pop(0)
+        reversed(gamestate["players"][target]["stack"]).pop(0)
     gamestate["players"][user_id]["hand"].remove(card)
     gamestate["players"][user_id]["stack"].append(card)
 
@@ -449,7 +486,7 @@ async def action_steal(sid, data, gamestate, user_id, room_id):
         "card_pool": gamestate["card_pool"],
     }
     # global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["players_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 

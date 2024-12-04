@@ -13,7 +13,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="row in leaderboard" :key="row.username">
+                    <tr v-for="row in leaderboard" :key="row.user_id">
                         <td>{{ row.username }}</td>
                         <td>{{ row.score }}</td>
                     </tr>
@@ -24,19 +24,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
-const leaderboard = ref([
-    { username: 'Lencse', score: 100 },
-    { username: 'Jampy', score: 90 },
-    { username: 'Dr. Momó', score: 80 },
-    { username: 'Leslie', score: 70 },
-    { username: 'Geckó', score: 60 },
-]);
+onMounted(async () => {
+    const response = await fetch('http://localhost:5000/leaderboard');
+    const data = await response.json();
+    leaderboard.value = data.leaderboard;
+});
+
+const leaderboard = ref([]);
 </script>
 
 <style scoped>
-
 .bg-image {
     position: fixed;
     top: 0;
@@ -47,7 +46,7 @@ const leaderboard = ref([
     background-size: cover;
     background-position: center;
     z-index: -1;
-}   
+}
 
 body {
     background-color: transparent;
@@ -92,7 +91,8 @@ table {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-th, td {
+th,
+td {
     border: 1px solid #ddd;
     padding: 12px;
     text-align: center;
@@ -119,7 +119,9 @@ tbody tr {
 }
 
 @media (max-width: 600px) {
-    th, td {
+
+    th,
+    td {
         padding: 8px;
     }
 

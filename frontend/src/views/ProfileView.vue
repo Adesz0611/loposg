@@ -16,7 +16,7 @@
                     <label for="password">Jelszó:</label>
                     <input id="password" v-model="userPassword" type="password" />
                 </div>
-                <button type="submit">Adatok frissítése</button>
+                <button type="submit" @click="updateProfile">Adatok frissítése</button>
             </form>
         </div>
     </div>
@@ -25,17 +25,35 @@
 <script setup>
 import { ref } from 'vue';
 import { useRoomIdStore } from '../stores/room_id';
+import { useUsernameStore } from '../stores/username';
 import { createRouter, useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
 const roomIdStore = useRoomIdStore();
-const userName = ref('John Doe');
+const usernameStore = useUsernameStore();
+const userName = ref(usernameStore.username);
 const userPassword = ref('');
 
 // Function to handle profile update
 function updateProfile() {
-    // Placeholder for the update functionality
-    console.log(`UserName: ${userName.value}, Password: ${userPassword.value}`);
+    // #send bearer token
+
+    axios.post('http://localhost:5000/profile', {
+        username: userName.value,
+        password: userPassword.value,
+    },
+        {
+            headers: {
+                Authorization: localStorage.getItem('access_token'),
+            },
+        }
+    ).then((response) => {
+        console.log(response.data);
+        usernameStore.username = userName.value;
+    }).catch((error) => {
+        console.error(error);
+    });
 }
 
 function goToHome() {
@@ -92,7 +110,8 @@ form div {
     margin-bottom: 1rem;
 }
 
-input[type="text"], input[type="password"] {
+input[type="text"],
+input[type="password"] {
     width: 100%;
     padding: 0.8rem;
     border: 1px solid #ddd;
