@@ -25,6 +25,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
+const leaderboard = ref([]);
 
 onMounted(async () => {
     const response = await fetch('http://localhost:5000/leaderboard');
@@ -32,7 +33,6 @@ onMounted(async () => {
     leaderboard.value = data.leaderboard;
 });
 
-const leaderboard = ref([]);
 </script>
 
 <style scoped>

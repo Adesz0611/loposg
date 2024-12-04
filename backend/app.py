@@ -151,13 +151,14 @@ async def edit_profile():
 
 @app.get("/leaderboard")
 async def leaderboard():
-    leaderboard = await app.pool.fetch("SELECT * FROM leaderboard ORDER BY score DESC")
+    leaderboard_db = await app.pool.fetch("SELECT * FROM leaderboard ORDER BY score DESC")
     # leaderboard = [{"user_id": x["user_id"], "score": x["score"]} for x in leaderboard]
     leaderboard = []
-    for x in leaderboard:
+    for x in leaderboard_db:
         user = await keycloak_admin.get_user(x["user_id"])
-        x["username"] = user["username"]
-        leaderboard.append(x)
+        ret = {"user_id": x["user_id"], "score": x["score"]}
+        ret["username"] = user["username"]
+        leaderboard.append(ret)
     return {"leaderboard": leaderboard}
 
 @sio.event
