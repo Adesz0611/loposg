@@ -8,7 +8,7 @@
                         style="scale: 1.1;" />
                     <!-- <Card :path="(true) ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
                         style="transform: scale(1.2);" /> -->
-                    <Card :path="(player_stack[players[1]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[1]][0] + '.png')" :show="player_stack[players[1]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[1]]) ? player_stack[players[1]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[1]" @click="target = players[1]" :path="(player_stack[players[1]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[1]][0] + '.png')" :show="player_stack[players[1]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[1]]) ? player_stack[players[1]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
             <div class="player" :class="{ current_player: players[3] == current_player }" v-show="player_count > 4">
@@ -16,7 +16,7 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[3]]"
                         style="scale: 1.1;" />
-                    <Card :path="(player_stack[players[3]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[3]][0] + '.png')" :show="player_stack[players[3]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[3]]) ? player_stack[players[3]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[3]" @click="target = players[3]" :path="(player_stack[players[3]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[3]][0] + '.png')" :show="player_stack[players[3]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[3]]) ? player_stack[players[3]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
         </div>
@@ -26,7 +26,7 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[0]]"
                         style="scale: 1.1;" />
-                    <Card :path="(player_stack[players[0]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[0]][0] + '.png')" :show="player_stack[players[0]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[0]]) ? player_stack[players[0]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[0]" @click="target = players[0]" :path="(player_stack[players[0]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[0]][0] + '.png')" :show="player_stack[players[0]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[0]]) ? player_stack[players[0]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
             <div class="asztal">
@@ -47,7 +47,7 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[2]]"
                         style="scale: 1.1;" />
-                    <Card :path="(player_stack[players[2]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[2]][0] + '.png')" :show="player_stack[players[2]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[2]]) ? player_stack[players[2]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[2]" @click="target = players[2]" :path="(player_stack[players[2]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[2]][0] + '.png')" :show="player_stack[players[2]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[2]]) ? player_stack[players[2]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
         </div>
@@ -126,15 +126,6 @@ const remaining_card_count = ref(0);
 const main_stack = ref([]);
 
 const player_stack = ref({});
-const valami = computed(() => {
-    console.log('player_stack: ', player_stack);
-    if (player_stack && player_stack[0] && player_stack[1][0]) {
-        return 'png/' + player_stack[0][0] + '.png';
-    } else {
-        return 'png/empty.png';
-    }
-
-});
 const players_hand = ref({});
 
 
@@ -145,6 +136,8 @@ const selected_card = ref('');
 const winner = ref('');
 const max_score = ref(0);
 const game_over = ref(false);
+
+const target = ref(''); // figyel öcsipók, ez itt username. OK?!!
 
 function start_game() {
     console.log('starting game...');
@@ -163,7 +156,7 @@ function pair() {
 function steal() {
     alert('Válaszd ki, hogy kitől szeretnél lopni!');
 
-    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, target: target_user, action: 'steal' });
+    socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, target: target.value, action: 'steal' });
     console.log('steal');
 }
 

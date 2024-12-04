@@ -318,6 +318,8 @@ async def card_action(sid, data):
         await action_discard(sid, data, gamestate, user_id, room_id)
     elif action == "pair":
         await action_pair(sid, data, gamestate, user_id, room_id)
+    elif action == "steal":
+        await action_steal(sid, data, gamestate, user_id, room_id)
 
 async def action_discard(sid, data, gamestate, user_id, room_id):
     if "card" not in data:
@@ -466,14 +468,35 @@ async def action_steal(sid, data, gamestate, user_id, room_id):
     if "card" not in data:
         await sio.emit("error", {"msg": "Card is required."}, to=sid)
         return
+    
+    if "target" not in data:
+        await sio.emit("error", {"msg": "Target is required."}, to=sid)
+        return
 
     card = data["card"]
     target = data["target"]
 
+    # get the user_id from the username
+    target = [player_id for player_id in gamestate["players"] if gamestate["players"][player_id]["name"] == target]
+    if len(target) != 1:
+        await sio.emit("error", {"msg": "Target not found."}, to=sid)
+        return
+    target = target[0]
+
+
     #TODO: do it for all the similar cards
 
-    for i in range(count_trailing_occurrences(gamestate["players"][target]["stack"])):
-        reversed(gamestate["players"][target]["stack"]).pop(0)
+    # for i in range(count_trailing_occurrences(gamestate["players"][target]["stack"])):
+    #     reversed(gamestate["players"][target]["stack"]).pop(0)
+
+    if card[1] != gamestate["players"][target]["stack"][-1][1]:
+        await sio.emit("error", {"msg": "You cannot steal this card."}, to=sid)
+        return
+    
+    howmany = count_trailing_occurrences(gamestate["players"][target]["stack"])
+    gamestate["players"][user_id]["stack"].extend(gamestate["players"][target]["stack"][-howmany:])
+    gamestate["players"][target]["stack"] = gamestate["players"][target]["stack"][:-howmany]
+
     gamestate["players"][user_id]["hand"].remove(card)
     gamestate["players"][user_id]["stack"].append(card)
 
