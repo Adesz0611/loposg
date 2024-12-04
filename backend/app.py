@@ -16,7 +16,7 @@ user_id2sid = {}
 openid = kc.KeycloakOpenID(server_url="http://localhost:8080/",
                            client_id="loposg",
                            realm_name="master",
-                           client_secret_key="Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq", # Rablo: HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD 
+                           client_secret_key="HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD", # Rablo: HAJQtPl0W5OOjxoSjXuqvgF1xyXOdDwD 
                                                                                  # Adri: Xtx2kEevrqiztUZt1puOZuSmP1Zht1sq
 )
 keycloak_admin = kc.KeycloakAdmin(server_url="http://localhost:8080/",
@@ -277,7 +277,7 @@ async def start_game(sid, data):
 
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] if len(gamestate["players"][player_id]["stack"]) > 0 else ['empty'] for player_id in gamestate["player_order"]}
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
@@ -384,7 +384,7 @@ async def action_discard(sid, data, gamestate, user_id, room_id):
     }
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}    
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] if len(gamestate["players"][player_id]["stack"]) > 0 else ['empty'] for player_id in gamestate["player_order"]}
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
@@ -455,7 +455,7 @@ async def action_pair(sid, data, gamestate, user_id, room_id):
     }
     #global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-2:] for player_id in gamestate["player_order"]]
     # global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] if len(gamestate["players"][player_id]["stack"]) > 0 else ['empty'] for player_id in gamestate["player_order"]}
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 
@@ -487,7 +487,7 @@ async def action_steal(sid, data, gamestate, user_id, room_id):
         "card_pool": gamestate["card_pool"],
     }
     # global_gamestate["players_stack"] = [gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]]
-    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] for player_id in gamestate["player_order"]}
+    global_gamestate["player_stack"] = {gamestate["players"][player_id]["name"]: gamestate["players"][player_id]["stack"][-count_trailing_occurrences(gamestate["players"][player_id]["stack"]):] if len(gamestate["players"][player_id]["stack"]) > 0 else ['empty'] for player_id in gamestate["player_order"]}
     global_gamestate["players_hand"] = {gamestate["players"][player_id]["name"]: len(gamestate["players"][player_id]["hand"]) for player_id in gamestate["player_order"]}
     await sio.emit("global_gamestate", global_gamestate, room=room_id)
 

@@ -6,9 +6,7 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[1]]"
                         style="scale: 1.1;" />
-                    <!-- <Card :path="(true) ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
-                        style="transform: scale(1.2);" /> -->
-                    <Card path="png/empty.png" :show="false" :number="2" />
+                    <Card :path="'png/' + player_stack[1][0] + '.png'" :show="false" :number="2" />
                 </div>
             </div>
             <div class="player" :class="{ current_player: players[3] == current_player }" v-show="player_count > 4">
@@ -28,9 +26,9 @@
                         style="scale: 1.1;" />
                     <!-- <Card path="png/empty.png" :show="false" :number="2" /> -->
                     <!-- <Card v-show="player_stack && !player_stack[0]" path="png/empty.png" :show="false" :number="1" /> -->
-                    <Card :path="valami" :show="false" style="transform: scale(1.2);" />
                     <!-- <Card :path="'png/' + players_stack[players[0]][0] + '.png'" :show="true" -->
                     <!-- style="transform: scale(1.2);" /> -->
+                    <Card :path="'png/' + player_stack[1][0] + '.png'" :show="false" :number="2" />
                 </div>
             </div>
             <div class="asztal">
@@ -129,16 +127,7 @@ const current_player = ref('');
 const remaining_card_count = ref(0);
 const main_stack = ref([]);
 
-const player_stack = ref([[]]);
-const valami = computed(() => {
-    console.log('player_stack: ', player_stack);
-    if (player_stack && player_stack[0] && player_stack[1][0]) {
-        return 'png/' + player_stack[0][0] + '.png';
-    } else {
-        return 'png/empty.png';
-    }
-
-});
+const player_stack = ref([['empty'], ['empty'], ['empty'], ['empty'], ['empty'], ['empty']]);
 const players_hand = ref({});
 
 
