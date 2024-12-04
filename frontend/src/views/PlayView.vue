@@ -8,15 +8,15 @@
                         style="scale: 1.1;" />
                     <!-- <Card :path="(true) ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
                         style="transform: scale(1.2);" /> -->
-                    <Card path="png/empty.png" :show="false" :number="2" />
+                    <Card :path="(player_stack[players[1]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[1]][0] + '.png')" :show="player_stack[players[1]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[1]]) ? player_stack[players[1]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
             <div class="player" :class="{ current_player: players[3] == current_player }" v-show="player_count > 4">
                 <p id="username">{{ players[3] }}</p>
                 <div class="hand">
-                    <Card path="png/empty.png" :show="false" :number="5" />
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[3]]"
                         style="scale: 1.1;" />
+                    <Card :path="(player_stack[players[3]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[3]][0] + '.png')" :show="player_stack[players[3]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[3]]) ? player_stack[players[3]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
         </div>
@@ -26,11 +26,7 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[0]]"
                         style="scale: 1.1;" />
-                    <!-- <Card path="png/empty.png" :show="false" :number="2" /> -->
-                    <!-- <Card v-show="player_stack && !player_stack[0]" path="png/empty.png" :show="false" :number="1" /> -->
-                    <Card :path="valami" :show="false" style="transform: scale(1.2);" />
-                    <!-- <Card :path="'png/' + players_stack[players[0]][0] + '.png'" :show="true" -->
-                    <!-- style="transform: scale(1.2);" /> -->
+                    <Card :path="(player_stack[players[0]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[0]][0] + '.png')" :show="player_stack[players[0]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[0]]) ? player_stack[players[0]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
             <div class="asztal">
@@ -49,9 +45,9 @@
             <div class="player" :class="{ current_player: players[2] == current_player }" v-show="player_count > 3">
                 <p id="username">{{ players[2] }}</p>
                 <div class="hand">
-                    <Card path="png/empty.png" :show="false" :number="5" />
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[2]]"
                         style="scale: 1.1;" />
+                    <Card :path="(player_stack[players[2]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[2]][0] + '.png')" :show="player_stack[players[2]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[2]]) ? player_stack[players[2]].length : 0" style="transform: scale(1.2);" />
                 </div>
             </div>
         </div>
@@ -59,7 +55,7 @@
             <div class="player" :class="{ current_player: username_store.username == current_player }">
                 <p id="username">{{ username_store.username }} (én)</p>
                 <div class="player_hand">
-                    <Card :path="'png/' + my_stack[my_stack.length - 1] + '.png'" :show="false"
+                    <Card :path="'png/' + (my_stack[my_stack.length - 1] ? my_stack[my_stack.length - 1] : 'empty') + '.png'" :show="false"
                         style="transform: scale(1.2);" />
                     <div class="hand">
                         <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'"
@@ -129,7 +125,7 @@ const current_player = ref('');
 const remaining_card_count = ref(0);
 const main_stack = ref([]);
 
-const player_stack = ref([[]]);
+const player_stack = ref({});
 const valami = computed(() => {
     console.log('player_stack: ', player_stack);
     if (player_stack && player_stack[0] && player_stack[1][0]) {
