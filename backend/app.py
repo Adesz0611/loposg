@@ -317,7 +317,7 @@ async def card_action(sid, data):
     elif action == "pair":
         await action_pair(sid, data, gamestate, user_id, room_id)
     elif action == "steal":
-        await action_steal(sid, data, gamestate, user_id, room_id, toStack)
+        await action_steal(sid, data, gamestate, user_id, room_id)
 
 async def action_discard(sid, data, gamestate, user_id, room_id):
     if "card" not in data:
