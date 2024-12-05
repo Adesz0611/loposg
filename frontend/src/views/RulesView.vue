@@ -1,5 +1,5 @@
 <template>
-  <div class = "bg-image"></div>
+  <div class="bg-image"></div>
   <div class="container">
     <header>
       <h1 class="text-oldalcim">LopósG Szabályai</h1>
@@ -24,28 +24,27 @@
       <li><strong>Lerakás:</strong> Ha a játékosnak van két azonos értékű lapja, lerakhatja azokat az asztalra.</li>
       <li><strong>Dobás:</strong> Egy lapot a dobópaklira helyezhet, ha nincs más akció.</li>
       <li><strong>Lopás:</strong> A játékos a saját lapjával ellophatja egy másik játékos aktív lapjait.</li>
-      <li><strong>Védés:</strong> Lopás esetén a lopás áldozata azonnal, saját körén kívül kivédheti azt egy azonos
-        lappal.</li>
+      <!-- <li><strong>Védés:</strong> Lopás esetén a lopás áldozata azonnal, saját körén kívül kivédheti azt egy azonos
+        lappal.</li> -->
     </ul>
 
-    <h3>6. A dobópakli szerepe</h3>
+    <!-- <h3>6. A dobópakli szerepe</h3>
     <p>A dobópakli legfelső lapját a játékosok lopáshoz vagy párképzéshez felhasználhatják. Ha a dobópakli kiürülne,
-      új lapot fordítunk fel a pakliból.</p>
+      új lapot fordítunk fel a pakliból.</p> -->
 
-    <h3>7. Pontozás</h3>
+    <h3>6. Pontozás</h3>
     <p>A játékosok a játék végén a lerakott lapjaik alapján pontokat kapnak:</p>
     <ul>
       <li>2-7 értékű lapok: 5 pont/lap</li>
       <li>8-10 + Bubi, Dáma, Király, Ász: 10 pont/lap</li>
     </ul>
 
-    <h3>8. Győzelem</h3>
+    <h3>7. Győzelem</h3>
     <p>A legtöbb pontot szerző játékos nyer.</p>
   </div>
 </template>
 
 <style scoped>
-
 .bg-image {
   position: fixed;
   top: 0;
@@ -90,7 +89,8 @@ header {
   margin: 0;
 }
 
-h1, h2 {
+h1,
+h2 {
   color: #007bff;
 }
 
@@ -104,6 +104,4 @@ footer {
   background: #f1f1f1;
   margin-top: 2rem;
 }
-
-
 </style>

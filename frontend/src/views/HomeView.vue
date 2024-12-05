@@ -3,6 +3,8 @@
   <div class="container">
     <div class="bg-image"></div>
     <div class="d-flex flex-column" style="min-height: calc(100vh - 112px);">
+      <h1 class="display-1 text-center my-5 anton-sc-regular"
+        style="color: white; text-shadow: 1px 1px 2px #000000; margin-top: 70px;">LOPÓSG</h1>
       <BListGroup class="my-auto">
         <div v-if="!isLoggedIn">
           <BListGroupItem>
@@ -97,5 +99,12 @@ function join_room() {
   background-size: cover;
   background-position: center;
   z-index: -1;
+}
+
+.anton-sc-regular {
+  font-family: "PT Serif", serif;
+  font-weight: 600;
+  font-size: 100;
+  font-style: normal;
 }
 </style>

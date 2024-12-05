@@ -8,7 +8,11 @@
                         style="scale: 1.1;" />
                     <!-- <Card :path="(true) ? 'png/empty.png' : ('png/' + player_stack[1][0] + '.png')" :show="false"
                         style="transform: scale(1.2);" /> -->
-                    <Card :target="target == players[1]" @click="target = players[1]" :path="(player_stack[players[1]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[1]][0] + '.png')" :show="player_stack[players[1]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[1]]) ? player_stack[players[1]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[1]" @click="target = players[1]"
+                        :path="(player_stack[players[1]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[1]][0] + '.png')"
+                        :show="player_stack[players[1]]?.[0] !== undefined"
+                        :number="Array.isArray(player_stack[players[1]]) ? player_stack[players[1]].length : 0"
+                        style="transform: scale(1.2);" />
                 </div>
             </div>
             <div class="player" :class="{ current_player: players[3] == current_player }" v-show="player_count > 4">
@@ -16,7 +20,11 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[3]]"
                         style="scale: 1.1;" />
-                    <Card :target="target == players[3]" @click="target = players[3]" :path="(player_stack[players[3]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[3]][0] + '.png')" :show="player_stack[players[3]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[3]]) ? player_stack[players[3]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[3]" @click="target = players[3]"
+                        :path="(player_stack[players[3]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[3]][0] + '.png')"
+                        :show="player_stack[players[3]]?.[0] !== undefined"
+                        :number="Array.isArray(player_stack[players[3]]) ? player_stack[players[3]].length : 0"
+                        style="transform: scale(1.2);" />
                 </div>
             </div>
         </div>
@@ -26,7 +34,11 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[0]]"
                         style="scale: 1.1;" />
-                    <Card :target="target == players[0]" @click="target = players[0]" :path="(player_stack[players[0]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[0]][0] + '.png')" :show="player_stack[players[0]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[0]]) ? player_stack[players[0]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[0]" @click="target = players[0]"
+                        :path="(player_stack[players[0]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[0]][0] + '.png')"
+                        :show="player_stack[players[0]]?.[0] !== undefined"
+                        :number="Array.isArray(player_stack[players[0]]) ? player_stack[players[0]].length : 0"
+                        style="transform: scale(1.2);" />
                 </div>
             </div>
             <div class="asztal">
@@ -47,7 +59,11 @@
                 <div class="hand">
                     <Card v-show="game_started" path="png/back.png" :show="true" :number="players_hand[players[2]]"
                         style="scale: 1.1;" />
-                    <Card :target="target == players[2]" @click="target = players[2]" :path="(player_stack[players[2]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[2]][0] + '.png')" :show="player_stack[players[2]]?.[0] !== undefined" :number="Array.isArray(player_stack[players[2]]) ? player_stack[players[2]].length : 0" style="transform: scale(1.2);" />
+                    <Card :target="target == players[2]" @click="target = players[2]"
+                        :path="(player_stack[players[2]]?.[0] === undefined) ? 'png/empty.png' : ('png/' + player_stack[players[2]][0] + '.png')"
+                        :show="player_stack[players[2]]?.[0] !== undefined"
+                        :number="Array.isArray(player_stack[players[2]]) ? player_stack[players[2]].length : 0"
+                        style="transform: scale(1.2);" />
                 </div>
             </div>
         </div>
@@ -55,17 +71,18 @@
             <div class="player" :class="{ current_player: username_store.username == current_player }">
                 <p id="username">{{ username_store.username }} (én)</p>
                 <div class="player_hand">
-                    <Card :path="'png/' + (my_stack[my_stack.length - 1] ? my_stack[my_stack.length - 1] : 'empty') + '.png'" :show="false"
-                        style="transform: scale(1.2);" />
+                    <Card
+                        :path="'png/' + (my_stack[my_stack.length - 1] ? my_stack[my_stack.length - 1] : 'empty') + '.png'"
+                        :show="false" style="transform: scale(1.2);" />
                     <div class="hand">
                         <Card v-for="card in my_cards" :key="card" :path="'png/' + card + '.png'"
                             @click="selected_card = card" :selected="card == selected_card" />
                     </div>
-                    <BButtonGroup>
-                        <BButton pill variant="primary" @click="discard">Kártya eldobása</BButton>
-                        <BButton pill variant="success" @click="pair">Kártya lerakása</BButton>
+                    <div style="display: flex; gap: 10px;">
+                        <BButton pill variant="primary" @click="discard">Eldobás</BButton>
+                        <BButton pill variant="success" @click="pair">Párosítás</BButton>
                         <BButton pill variant="danger" @click="steal">Lopás</BButton>
-                    </BButtonGroup>
+                    </div>
                 </div>
             </div>
         </div>
@@ -148,14 +165,13 @@ function discard() {
 }
 
 function pair() {
+
     let pair_card = my_cards.value.find(card => card[1] == selected_card.value[1] && card != selected_card.value);
     socket.emit('card_action', { room_id: props.room_id, cards: [selected_card.value, pair_card], action: 'pair' });
     console.log('pair');
 }
 
 function steal() {
-    alert('Válaszd ki, hogy kitől szeretnél lopni!');
-
     socket.emit('card_action', { room_id: props.room_id, card: selected_card.value, target: target.value, action: 'steal' });
     console.log('steal');
 }
@@ -240,7 +256,7 @@ function steal() {
 .hand {
     display: flex;
     justify-content: center;
-    gap: 2%;
+    gap: 4%;
 }
 
 .player_hand {
